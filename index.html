@@ -1,0 +1,3821 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="format-detection" content="telephone=no">
+<meta name="theme-color" content="#000000">
+<title>考研倒计时：深夜的三种温度</title>
+<style>
+/* ============================================================
+   全局重置
+   ============================================================ */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+html, body {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: #000;
+  font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Helvetica Neue", Arial, sans-serif;
+  color: #fff;
+  touch-action: none;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+img { display: block; max-width: 100%; }
+video { display: block; }
+button { font-family: inherit; }
+
+/* ============================================================
+   游戏视口 —— 9:16 竖屏适配
+   ============================================================ */
+#viewport {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  background: #000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+#stage {
+  position: relative;
+  width: 100vw;
+  height: 177.7778vw;
+  max-width: 56.25vh;
+  max-height: 100vh;
+  background: #000;
+  overflow: hidden;
+  box-shadow: 0 0 60px rgba(0,0,0,0.95);
+  z-index: 1;
+}
+
+.layer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+.layer.interactive { pointer-events: auto; }
+
+/* ============================================================
+   加载画面
+   ============================================================ */
+#loading {
+  position: absolute;
+  inset: 0;
+  z-index: 9999;
+  background: radial-gradient(ellipse at center, #1c1c2e 0%, #05050a 100%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  transition: opacity 0.8s ease, visibility 0.8s ease;
+}
+#loading.hidden {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+.loading-logo {
+  font-size: 7vw;
+  font-weight: 900;
+  letter-spacing: 0.15em;
+  color: #ff6b6b;
+  text-shadow: 0 0 40px rgba(255,107,107,0.7), 0 0 80px rgba(255,107,107,0.3);
+  animation: logoPulse 2.4s ease-in-out infinite;
+  text-align: center;
+  line-height: 1.2;
+}
+@keyframes logoPulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.85; transform: scale(0.98); }
+}
+.loading-sub {
+  margin-top: 2vh;
+  font-size: 3.2vw;
+  color: #888;
+  letter-spacing: 0.4em;
+  text-align: center;
+}
+.loading-progress-wrap {
+  margin-top: 8vh;
+  width: 62vw;
+  height: 0.8vh;
+  background: rgba(255,255,255,0.08);
+  border-radius: 1vh;
+  overflow: hidden;
+  box-shadow: inset 0 1px 3px rgba(0,0,0,0.6);
+}
+.loading-progress-bar {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, #ff6b6b, #ffb86b, #ff6b6b);
+  background-size: 200% 100%;
+  border-radius: 1vh;
+  transition: width 0.25s ease;
+  box-shadow: 0 0 15px rgba(255,107,107,0.8);
+  animation: barShine 2s linear infinite;
+}
+@keyframes barShine {
+  0% { background-position: 0% 0; }
+  100% { background-position: 200% 0; }
+}
+.loading-percent {
+  margin-top: 2vh;
+  font-size: 2.8vw;
+  color: #ff6b6b;
+  letter-spacing: 0.15em;
+  font-variant-numeric: tabular-nums;
+}
+.loading-tip {
+  position: absolute;
+  bottom: 5vh;
+  font-size: 2.6vw;
+  color: #555;
+  letter-spacing: 0.15em;
+  text-align: center;
+  padding: 0 8vw;
+  line-height: 1.6;
+}
+
+/* ============================================================
+   主菜单
+   ============================================================ */
+#main-menu {
+  position: absolute;
+  inset: 0;
+  z-index: 500;
+  background: radial-gradient(ellipse at center, #1a1024 0%, #05050a 100%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  transition: opacity 0.6s ease, visibility 0.6s ease;
+}
+#main-menu.hidden {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+.menu-inner {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+}
+.menu-title {
+  font-size: 10vw;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+  color: #fff;
+  text-shadow: 0 0 40px rgba(255,107,107,0.8), 0 0 80px rgba(255,107,107,0.4);
+  text-align: center;
+  line-height: 1.15;
+  margin-bottom: 1vh;
+}
+.menu-title .accent {
+  background: linear-gradient(135deg, #ff6b6b, #ffb86b);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+.menu-subtitle {
+  font-size: 3.4vw;
+  color: #ff8fa8;
+  letter-spacing: 0.5em;
+  text-align: center;
+  margin-bottom: 10vh;
+  text-shadow: 0 0 15px rgba(255,143,168,0.5);
+}
+.menu-btn {
+  width: 66vw;
+  padding: 2.6vh 0;
+  margin: 1.1vh 0;
+  background: linear-gradient(135deg, rgba(255,107,107,0.08), rgba(255,184,107,0.08));
+  border: 1px solid rgba(255,107,107,0.4);
+  border-radius: 1.2vh;
+  color: #fff;
+  font-size: 4.2vw;
+  font-weight: 500;
+  letter-spacing: 0.35em;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  position: relative;
+  overflow: hidden;
+}
+.menu-btn::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,107,107,0.3), transparent);
+  transition: left 0.5s ease;
+}
+.menu-btn:active::before,
+.menu-btn:hover::before { left: 100%; }
+.menu-btn:active,
+.menu-btn:hover {
+  background: linear-gradient(135deg, rgba(255,107,107,0.25), rgba(255,184,107,0.25));
+  border-color: #ff6b6b;
+  box-shadow: 0 0 30px rgba(255,107,107,0.6), inset 0 0 20px rgba(255,107,107,0.1);
+  transform: translateY(-2px) scale(1.02);
+}
+.menu-btn.disabled {
+  opacity: 0.25;
+  pointer-events: none;
+}
+.menu-footer {
+  position: absolute;
+  bottom: 3vh;
+  left: 0;
+  right: 0;
+  text-align: center;
+  font-size: 2.4vw;
+  color: #333;
+  letter-spacing: 0.2em;
+}
+
+#game {
+  position: absolute;
+  inset: 0;
+  z-index: 100;
+  display: none;
+}
+#game.active { display: block; }
+
+#bg-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  transition: opacity 0.7s ease;
+  will-change: opacity;
+}
+#bg-layer.fading { opacity: 0; }
+
+#bg-filter {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  transition: background 0.8s ease;
+}
+#bg-filter.cold  { background: linear-gradient(180deg, rgba(80,100,140,0.25), rgba(20,30,60,0.4)); }
+#bg-filter.warm  { background: linear-gradient(180deg, rgba(180,120,60,0.2),  rgba(60,30,10,0.35)); }
+#bg-filter.dark  { background: linear-gradient(180deg, rgba(0,0,0,0.5),       rgba(0,0,0,0.7)); }
+#bg-filter.rain  { background: linear-gradient(180deg, rgba(40,60,90,0.3),    rgba(10,20,40,0.5)); }
+#bg-filter.tense { background: linear-gradient(180deg, rgba(80,20,20,0.2),    rgba(20,0,0,0.5)); }
+
+#char-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  pointer-events: none;
+  overflow: hidden;
+}
+.char-slot {
+  position: absolute;
+  bottom: 0;
+  height: 88%;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  transition: opacity 0.55s cubic-bezier(0.4, 0, 0.2, 1),
+              transform 0.55s cubic-bezier(0.4, 0, 0.2, 1);
+  will-change: opacity, transform;
+}
+.char-slot.pos-center    { left: 50%; transform: translateX(-50%); }
+.char-slot.pos-left      { left: 22%; transform: translateX(-50%) scale(0.92); }
+.char-slot.pos-right     { left: 78%; transform: translateX(-50%) scale(0.92); }
+.char-slot.pos-far-left  { left: 12%; transform: translateX(-50%) scale(0.82); }
+.char-slot.pos-far-right { left: 88%; transform: translateX(-50%) scale(0.82); }
+.char-slot.entering {
+  opacity: 0;
+  transform: translateX(-50%) translateY(3vh);
+}
+.char-slot.visible { opacity: 1; }
+.char-slot.hidden-pos { opacity: 0; }
+.char-slot.speaking img,
+.char-slot.speaking video {
+  filter: drop-shadow(0 0 30px rgba(255,107,107,0.5)) brightness(1.06) drop-shadow(0 4px 20px rgba(0,0,0,0.6));
+}
+.char-slot img,
+.char-slot video {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  filter: drop-shadow(0 4px 20px rgba(0,0,0,0.6));
+  transition: filter 0.3s ease;
+}
+.char-slot.pos-left img,
+.char-slot.pos-left video { transform: translateX(-8%); }
+.char-slot.pos-right img,
+.char-slot.pos-right video { transform: translateX(8%); }
+
+#cg-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 60;
+  background: #000;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+#cg-layer.active {
+  display: flex;
+  animation: cgFadeIn 0.9s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+#cg-layer.closing { animation: cgFadeOut 0.6s ease forwards; }
+@keyframes cgFadeIn {
+  from { opacity: 0; transform: scale(1.06); }
+  to   { opacity: 1; transform: scale(1); }
+}
+@keyframes cgFadeOut {
+  from { opacity: 1; transform: scale(1); }
+  to   { opacity: 0; transform: scale(0.98); }
+}
+#cg-layer video,
+#cg-layer img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+#dialogue-layer {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 20;
+  height: 34%;
+  padding: 0 3.5vw 3vh 3.5vw;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.35s ease;
+}
+#dialogue-layer.active {
+  opacity: 1;
+  pointer-events: auto;
+}
+#speaker-name {
+  display: inline-block;
+  align-self: flex-start;
+  padding: 0.9vh 3vw;
+  background: linear-gradient(135deg, rgba(255,107,107,0.95), rgba(200,60,60,0.95));
+  border-radius: 0.9vh 0.9vh 0 0;
+  font-size: 3.4vw;
+  letter-spacing: 0.15em;
+  color: #fff;
+  font-weight: 600;
+  text-shadow: 0 1px 4px rgba(0,0,0,0.5);
+  box-shadow: 0 -2px 12px rgba(255,107,107,0.4), 0 2px 8px rgba(0,0,0,0.5);
+  min-width: 18vw;
+  text-align: center;
+  margin-left: 1vw;
+  transition: transform 0.3s ease, opacity 0.3s ease;
+}
+#speaker-name.hidden {
+  opacity: 0;
+  transform: translateY(2vh);
+  pointer-events: none;
+}
+#dialogue-box {
+  background: linear-gradient(180deg, rgba(0,0,0,0.82) 0%, rgba(0,0,0,0.92) 100%);
+  border: 1px solid rgba(255,107,107,0.35);
+  border-top: 2px solid rgba(255,107,107,0.7);
+  border-radius: 0 1vh 1vh 1vh;
+  padding: 3vh 5vw 3.5vh 5vw;
+  min-height: 20vh;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  box-shadow: 0 0 40px rgba(0,0,0,0.8),
+              inset 0 0 60px rgba(255,107,107,0.04),
+              0 0 20px rgba(255,107,107,0.1);
+  position: relative;
+}
+#dialogue-box::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255,107,107,0.8), transparent);
+}
+#dialogue-text {
+  font-size: 3.8vw;
+  line-height: 1.75;
+  color: #f2f2f2;
+  letter-spacing: 0.03em;
+  text-shadow: 0 1px 4px rgba(0,0,0,0.9);
+  word-break: break-word;
+  min-height: 8vh;
+}
+#next-indicator {
+  position: absolute;
+  right: 3vw;
+  bottom: 1.5vh;
+  font-size: 3.4vw;
+  color: #ff6b6b;
+  animation: indicatorBounce 1.3s ease-in-out infinite;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  text-shadow: 0 0 12px rgba(255,107,107,0.9);
+}
+#next-indicator.show { opacity: 1; }
+@keyframes indicatorBounce {
+  0%, 100% { transform: translateY(0); opacity: 0.6; }
+  50% { transform: translateY(0.9vh); opacity: 1; }
+}
+
+#hud {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 30;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 2.2vh 3vw;
+  pointer-events: none;
+}
+#hud > * { pointer-events: auto; }
+.hud-icon {
+  width: 11vw;
+  height: 11vw;
+  border-radius: 50%;
+  background: rgba(0,0,0,0.65);
+  border: 1px solid rgba(255,107,107,0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 4.8vw;
+  color: #ff6b6b;
+  cursor: pointer;
+  transition: all 0.22s ease;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  box-shadow: 0 2px 10px rgba(0,0,0,0.5);
+}
+.hud-icon:active {
+  background: rgba(255,107,107,0.3);
+  transform: scale(0.9);
+  box-shadow: 0 0 20px rgba(255,107,107,0.6);
+}
+.hud-icon.active {
+  background: rgba(255,107,107,0.4);
+  color: #fff;
+  box-shadow: 0 0 20px rgba(255,107,107,0.8);
+}
+#pressure-hud {
+  background: rgba(0,0,0,0.65);
+  border: 1px solid rgba(255,107,107,0.4);
+  border-radius: 2.5vh;
+  padding: 1.2vh 3.2vw;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  min-width: 42vw;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.5);
+  transition: transform 0.3s ease, opacity 0.3s ease;
+}
+#pressure-hud.hidden {
+  opacity: 0;
+  transform: translateY(-3vh);
+  pointer-events: none;
+}
+#pressure-hud .label {
+  font-size: 2.5vw;
+  color: #aaa;
+  letter-spacing: 0.15em;
+  margin-bottom: 0.7vh;
+  display: flex;
+  justify-content: space-between;
+}
+#pressure-hud .label .status-text {
+  color: #ff6b6b;
+  font-weight: 600;
+}
+#pressure-hud .bar-bg {
+  width: 100%;
+  height: 1.3vh;
+  background: rgba(255,255,255,0.1);
+  border-radius: 1vh;
+  overflow: hidden;
+}
+#pressure-hud .bar-fill {
+  height: 100%;
+  width: 50%;
+  background: linear-gradient(90deg, #4ecdc4 0%, #ffd93d 50%, #ff6b6b 100%);
+  border-radius: 1vh;
+  transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+#pressure-hud .value {
+  font-size: 2.5vw;
+  color: #ff6b6b;
+  text-align: right;
+  margin-top: 0.5vh;
+  font-variant-numeric: tabular-nums;
+}
+
+#choice-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 40;
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0,0,0,0.6);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  opacity: 0;
+  transition: opacity 0.4s ease;
+  padding: 0 8vw;
+}
+#choice-layer.active {
+  display: flex;
+  opacity: 1;
+}
+.choice-btn {
+  width: 100%;
+  padding: 2.8vh 4vw;
+  margin: 1.3vh 0;
+  background: linear-gradient(135deg, rgba(22,22,32,0.94), rgba(12,12,20,0.94));
+  border: 1px solid rgba(255,107,107,0.5);
+  border-radius: 1.3vh;
+  color: #f0f0f0;
+  font-size: 3.7vw;
+  line-height: 1.55;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  letter-spacing: 0.03em;
+  transform: translateY(3vh);
+  opacity: 0;
+  animation: choiceSlideIn 0.45s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  box-shadow: 0 6px 24px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.05);
+  position: relative;
+  overflow: hidden;
+}
+.choice-btn:nth-child(1) { animation-delay: 0.06s; }
+.choice-btn:nth-child(2) { animation-delay: 0.16s; }
+.choice-btn:nth-child(3) { animation-delay: 0.26s; }
+.choice-btn:nth-child(4) { animation-delay: 0.36s; }
+@keyframes choiceSlideIn {
+  to { transform: translateY(0); opacity: 1; }
+}
+.choice-btn:active,
+.choice-btn:hover {
+  background: linear-gradient(135deg, rgba(255,107,107,0.28), rgba(200,60,60,0.28));
+  border-color: #ff6b6b;
+  box-shadow: 0 0 30px rgba(255,107,107,0.7), inset 0 0 20px rgba(255,107,107,0.15);
+  transform: translateY(-2px) scale(1.015);
+  color: #fff;
+}
+.choice-btn.hidden-choice {
+  border: 2px solid #ffd700;
+  background: linear-gradient(135deg, rgba(60,42,0,0.95), rgba(80,55,0,0.95));
+  box-shadow: 0 0 35px rgba(255,215,0,0.7), inset 0 0 25px rgba(255,215,0,0.15);
+  color: #ffe066;
+  font-weight: 600;
+}
+.choice-btn.hidden-choice::before {
+  content: "★";
+  position: absolute;
+  left: 3.5vw;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 4vw;
+  color: #ffd700;
+  text-shadow: 0 0 15px rgba(255,215,0,0.9);
+  animation: starRotate 3s linear infinite;
+}
+@keyframes starRotate {
+  0% { transform: translateY(-50%) rotate(0deg); }
+  100% { transform: translateY(-50%) rotate(360deg); }
+}
+.choice-btn.hidden-choice:active,
+.choice-btn.hidden-choice:hover {
+  background: linear-gradient(135deg, rgba(100,72,0,0.95), rgba(130,92,0,0.95));
+  box-shadow: 0 0 50px rgba(255,215,0,1), inset 0 0 30px rgba(255,215,0,0.25);
+}
+
+.panel {
+  position: absolute;
+  inset: 0;
+  z-index: 700;
+  background: rgba(0,0,0,0.94);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  display: none;
+  flex-direction: column;
+  opacity: 0;
+  transition: opacity 0.35s ease;
+}
+.panel.active { display: flex; opacity: 1; }
+.panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 3vh 5vw 2.2vh;
+  border-bottom: 1px solid rgba(255,107,107,0.35);
+  background: linear-gradient(180deg, rgba(30,10,15,0.6), transparent);
+}
+.panel-title {
+  font-size: 5.2vw;
+  color: #ff6b6b;
+  letter-spacing: 0.25em;
+  text-shadow: 0 0 20px rgba(255,107,107,0.6);
+  font-weight: 700;
+}
+.panel-close {
+  width: 10vw;
+  height: 10vw;
+  border-radius: 50%;
+  background: rgba(255,107,107,0.15);
+  border: 1px solid rgba(255,107,107,0.5);
+  color: #ff6b6b;
+  font-size: 5vw;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.22s ease;
+  line-height: 1;
+}
+.panel-close:active {
+  background: rgba(255,107,107,0.4);
+  transform: scale(0.9) rotate(90deg);
+}
+.panel-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 3vh 5vw 6vh;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+}
+.panel-body::-webkit-scrollbar { width: 1.2vw; }
+.panel-body::-webkit-scrollbar-track { background: rgba(255,255,255,0.05); border-radius: 1vw; }
+.panel-body::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, #ff6b6b, #ff8fa8);
+  border-radius: 1vw;
+}
+
+.setting-item { margin-bottom: 3.5vh; }
+.setting-item .setting-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 1.5vh;
+}
+.setting-item label {
+  font-size: 3.5vw;
+  color: #ddd;
+  letter-spacing: 0.08em;
+}
+.setting-item .setting-value {
+  color: #ff6b6b;
+  font-size: 3.3vw;
+  font-variant-numeric: tabular-nums;
+}
+.setting-item input[type="range"] {
+  width: 100%;
+  height: 1.1vh;
+  -webkit-appearance: none;
+  appearance: none;
+  background: rgba(255,255,255,0.12);
+  border-radius: 1vh;
+  outline: none;
+}
+.setting-item input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 5.4vw;
+  height: 5.4vw;
+  border-radius: 50%;
+  background: radial-gradient(circle, #ff8fa8, #ff6b6b);
+  box-shadow: 0 0 15px rgba(255,107,107,0.9), 0 2px 6px rgba(0,0,0,0.6);
+}
+.setting-toggle {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 2.4vh 0;
+  border-bottom: 1px solid rgba(255,255,255,0.07);
+  font-size: 3.5vw;
+  color: #ddd;
+  letter-spacing: 0.08em;
+}
+.toggle-switch {
+  width: 13vw;
+  height: 6.5vw;
+  background: rgba(255,255,255,0.15);
+  border-radius: 3.3vw;
+  position: relative;
+  transition: background 0.3s ease;
+  cursor: pointer;
+  box-shadow: inset 0 2px 6px rgba(0,0,0,0.4);
+}
+.toggle-switch::after {
+  content: "";
+  position: absolute;
+  top: 0.6vw;
+  left: 0.6vw;
+  width: 5.3vw;
+  height: 5.3vw;
+  background: #fff;
+  border-radius: 50%;
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 2px 6px rgba(0,0,0,0.5);
+}
+.toggle-switch.on {
+  background: linear-gradient(135deg, #ff6b6b, #ff8fa8);
+  box-shadow: inset 0 2px 6px rgba(0,0,0,0.3), 0 0 15px rgba(255,107,107,0.5);
+}
+.toggle-switch.on::after { transform: translateX(6.4vw); }
+
+.save-slot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 2.8vh 3.5vw;
+  margin-bottom: 2.2vh;
+  background: linear-gradient(135deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02));
+  border: 1px solid rgba(255,107,107,0.3);
+  border-radius: 1.2vh;
+  cursor: pointer;
+  transition: all 0.22s ease;
+}
+.save-slot:active {
+  background: linear-gradient(135deg, rgba(255,107,107,0.25), rgba(255,184,107,0.15));
+  border-color: #ff6b6b;
+  transform: scale(0.99);
+}
+.save-slot .slot-num {
+  width: 12vw;
+  height: 12vw;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #ff6b6b, #ff8fa8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 5vw;
+  font-weight: 900;
+  color: #fff;
+  text-shadow: 0 1px 3px rgba(0,0,0,0.5);
+  box-shadow: 0 0 20px rgba(255,107,107,0.6);
+  flex-shrink: 0;
+}
+.save-slot .slot-info {
+  flex: 1;
+  margin-left: 4vw;
+  min-width: 0;
+}
+.save-slot .slot-title {
+  font-size: 3.5vw;
+  color: #ff6b6b;
+  margin-bottom: 0.9vh;
+  font-weight: 600;
+}
+.save-slot .slot-time {
+  font-size: 2.8vw;
+  color: #999;
+  font-variant-numeric: tabular-nums;
+}
+.save-slot .slot-empty {
+  font-size: 3.3vw;
+  color: #555;
+  font-style: italic;
+  letter-spacing: 0.1em;
+}
+.save-slot .slot-del {
+  width: 8vw;
+  height: 8vw;
+  border-radius: 50%;
+  background: rgba(255,60,60,0.15);
+  border: 1px solid rgba(255,60,60,0.4);
+  color: #ff4444;
+  font-size: 3.6vw;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-left: 2vw;
+}
+.save-slot .slot-del:active { background: rgba(255,60,60,0.4); }
+
+.gallery-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 3vw;
+}
+.gallery-item {
+  aspect-ratio: 16 / 9;
+  border-radius: 1.2vh;
+  overflow: hidden;
+  background: linear-gradient(135deg, #111, #1a1a1a);
+  border: 1px solid rgba(255,107,107,0.35);
+  position: relative;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+}
+.gallery-item:active {
+  transform: scale(0.96);
+  border-color: #ff6b6b;
+  box-shadow: 0 0 25px rgba(255,107,107,0.7);
+}
+.gallery-item img,
+.gallery-item video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  pointer-events: none;
+}
+.gallery-item .locked {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(circle at center, #1a1a1a, #050505);
+  color: #333;
+  font-size: 10vw;
+  font-weight: 900;
+}
+.gallery-item .caption {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 1.3vh 2vw;
+  background: linear-gradient(transparent, rgba(0,0,0,0.92));
+  font-size: 2.8vw;
+  color: #fff;
+  text-align: center;
+  letter-spacing: 0.08em;
+}
+.gallery-item.unlocked {
+  border-color: rgba(255,107,107,0.7);
+  box-shadow: 0 0 20px rgba(255,107,107,0.4);
+}
+
+#history-body .history-entry {
+  margin-bottom: 2.8vh;
+  padding-bottom: 2.4vh;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+#history-body .history-speaker {
+  font-size: 3.2vw;
+  color: #ff6b6b;
+  margin-bottom: 1vh;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+}
+#history-body .history-text {
+  font-size: 3.4vw;
+  color: #ccc;
+  line-height: 1.7;
+}
+
+#cg-viewer {
+  position: absolute;
+  inset: 0;
+  z-index: 900;
+  background: #000;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+}
+#cg-viewer.active { display: flex; }
+#cg-viewer img,
+#cg-viewer video {
+  width: 100%;
+  height: auto;
+  max-height: 90vh;
+  object-fit: contain;
+}
+#cg-viewer .cg-viewer-close {
+  position: absolute;
+  top: calc(3vh + env(safe-area-inset-top));
+  right: 5vw;
+  width: 11vw;
+  height: 11vw;
+  border-radius: 50%;
+  background: rgba(255,107,107,0.25);
+  border: 1px solid rgba(255,107,107,0.7);
+  color: #ff6b6b;
+  font-size: 5.5vw;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+#cg-viewer .cg-viewer-title {
+  position: absolute;
+  bottom: 4vh;
+  left: 0;
+  right: 0;
+  text-align: center;
+  font-size: 4vw;
+  color: #ff6b6b;
+  letter-spacing: 0.2em;
+}
+
+#ending {
+  position: absolute;
+  inset: 0;
+  z-index: 800;
+  background: #000;
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 8vw 6vw;
+  text-align: center;
+}
+#ending.active { display: flex; }
+#ending::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at center, rgba(255,107,107,0.08), transparent 70%);
+  z-index: 0;
+  animation: endingGlow 4s ease-in-out infinite;
+}
+@keyframes endingGlow {
+  0%, 100% { opacity: 0.5; }
+  50% { opacity: 1; }
+}
+#ending .ending-title {
+  position: relative;
+  z-index: 1;
+  font-size: 8vw;
+  font-weight: 900;
+  color: #ff6b6b;
+  letter-spacing: 0.2em;
+  margin-bottom: 4vh;
+  text-shadow: 0 0 40px rgba(255,107,107,0.9), 0 0 80px rgba(255,107,107,0.5);
+  animation: endingTitleIn 1.5s ease;
+}
+@keyframes endingTitleIn {
+  from { opacity: 0; transform: translateY(3vh); letter-spacing: 0.5em; }
+  to   { opacity: 1; transform: translateY(0); letter-spacing: 0.2em; }
+}
+#ending .ending-desc {
+  position: relative;
+  z-index: 1;
+  font-size: 3.8vw;
+  line-height: 2;
+  color: #ccc;
+  margin-bottom: 8vh;
+  max-width: 82vw;
+  white-space: pre-wrap;
+  letter-spacing: 0.04em;
+  animation: endingDescIn 1.5s 0.5s ease both;
+}
+@keyframes endingDescIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+#ending .ending-btn {
+  position: relative;
+  z-index: 1;
+  padding: 2.2vh 10vw;
+  background: rgba(255,107,107,0.12);
+  border: 2px solid #ff6b6b;
+  border-radius: 1.2vh;
+  color: #ff6b6b;
+  font-size: 4vw;
+  letter-spacing: 0.35em;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  animation: endingDescIn 1.5s 1s ease both;
+}
+#ending .ending-btn:active {
+  background: #ff6b6b;
+  color: #000;
+  box-shadow: 0 0 40px rgba(255,107,107,0.9);
+}
+#ending .particles {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+#ending .particles span {
+  position: absolute;
+  background: #ff6b6b;
+  border-radius: 50%;
+  box-shadow: 0 0 10px rgba(255,107,107,0.9);
+  animation: particleFloat linear infinite;
+}
+@keyframes particleFloat {
+  0% { transform: translateY(100vh) scale(0); opacity: 0; }
+  10% { opacity: 0.8; }
+  90% { opacity: 0.8; }
+  100% { transform: translateY(-10vh) scale(1.5); opacity: 0; }
+}
+
+#pause-menu {
+  position: absolute;
+  inset: 0;
+  z-index: 650;
+  background: rgba(0,0,0,0.88);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 0 12vw;
+}
+#pause-menu.active {
+  display: flex;
+  animation: pauseFadeIn 0.3s ease;
+}
+@keyframes pauseFadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+#pause-menu .pause-title {
+  font-size: 7vw;
+  color: #ff6b6b;
+  letter-spacing: 0.3em;
+  margin-bottom: 6vh;
+  text-shadow: 0 0 30px rgba(255,107,107,0.7);
+}
+#pause-menu .menu-btn {
+  width: 100%;
+  margin: 1.2vh 0;
+}
+
+#auto-indicator,
+#skip-indicator {
+  position: absolute;
+  top: 13vh;
+  left: 50%;
+  transform: translateX(-50%);
+  background: linear-gradient(135deg, rgba(255,107,107,0.95), rgba(255,143,168,0.95));
+  color: #fff;
+  padding: 0.9vh 4vw;
+  border-radius: 3vh;
+  font-size: 3vw;
+  letter-spacing: 0.25em;
+  z-index: 35;
+  display: none;
+  box-shadow: 0 4px 20px rgba(255,107,107,0.7);
+  font-weight: 600;
+}
+#auto-indicator.active,
+#skip-indicator.active {
+  display: block;
+  animation: indicatorPulse 1.6s ease-in-out infinite;
+}
+@keyframes indicatorPulse {
+  0%, 100% { opacity: 1; transform: translateX(-50%) scale(1); }
+  50% { opacity: 0.8; transform: translateX(-50%) scale(1.05); }
+}
+
+.float-text {
+  position: absolute;
+  font-size: 4vw;
+  font-weight: 900;
+  pointer-events: none;
+  z-index: 45;
+  text-shadow: 0 0 15px currentColor, 0 2px 6px rgba(0,0,0,0.9);
+  animation: floatUp 1.6s ease-out forwards;
+  letter-spacing: 0.05em;
+  transform: translateX(-50%);
+}
+.float-text.positive { color: #4ade80; }
+.float-text.negative { color: #ff6b6b; }
+.float-text.pressure-up { color: #ff8fa8; }
+.float-text.pressure-down { color: #4ecdc4; }
+@keyframes floatUp {
+  0% { opacity: 0; transform: translateX(-50%) translateY(2vh) scale(0.8); }
+  20% { opacity: 1; transform: translateX(-50%) translateY(0) scale(1.1); }
+  100% { opacity: 0; transform: translateX(-50%) translateY(-8vh) scale(1); }
+}
+
+.shake { animation: screenShake 0.4s ease-in-out; }
+@keyframes screenShake {
+  0%, 100% { transform: translate(0, 0); }
+  20% { transform: translate(-8px, 5px); }
+  40% { transform: translate(7px, -6px); }
+  60% { transform: translate(-5px, -4px); }
+  80% { transform: translate(4px, 3px); }
+}
+#flash-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 55;
+  background: #fff;
+  opacity: 0;
+  pointer-events: none;
+}
+#flash-overlay.flash { animation: flashAnim 0.5s ease-out; }
+@keyframes flashAnim {
+  0% { opacity: 0.95; }
+  100% { opacity: 0; }
+}
+
+#rotate-tip {
+  position: fixed;
+  inset: 0;
+  z-index: 99999;
+  background: #000;
+  color: #ff6b6b;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  font-size: 5vw;
+  letter-spacing: 0.3em;
+  text-align: center;
+  padding: 5vw;
+}
+@media (orientation: landscape) and (max-height: 500px) {
+  #rotate-tip { display: flex !important; }
+}
+#rotate-tip .rotate-icon {
+  font-size: 15vw;
+  margin-bottom: 4vh;
+  animation: rotateAnim 2s ease-in-out infinite;
+}
+@keyframes rotateAnim {
+  0%, 100% { transform: rotate(0deg); }
+  50% { transform: rotate(90deg); }
+}
+
+.hidden { display: none !important; }
+@supports (padding: env(safe-area-inset-top)) {
+  #hud { padding-top: calc(2.2vh + env(safe-area-inset-top)); }
+  #dialogue-layer { padding-bottom: calc(3vh + env(safe-area-inset-bottom)); }
+  .panel-header { padding-top: calc(3vh + env(safe-area-inset-top)); }
+}
+</style>
+</head>
+<body>
+
+<div id="rotate-tip">
+  <div class="rotate-icon">📱</div>
+  <div>请将手机竖屏使用</div>
+</div>
+
+<div id="viewport">
+  <div id="stage">
+
+    <div id="loading">
+      <div class="loading-logo">考研倒计时</div>
+      <div class="loading-sub">深夜的三种温度</div>
+      <div class="loading-progress-wrap">
+        <div class="loading-progress-bar" id="loading-bar"></div>
+      </div>
+      <div class="loading-percent" id="loading-percent">0%</div>
+      <div class="loading-tip" id="loading-tip">正在加载资源……</div>
+    </div>
+
+    <div id="main-menu" class="hidden">
+      <div class="menu-inner">
+        <div class="menu-title"><span class="accent">考研</span>倒计时</div>
+        <div class="menu-subtitle">深夜的三种温度</div>
+        <div class="menu-btn" id="menu-start">开 始 游 戏</div>
+        <div class="menu-btn" id="menu-continue">继 续 游 戏</div>
+        <div class="menu-btn" id="menu-gallery">画 廊 回 忆</div>
+        <div class="menu-btn" id="menu-settings">设 置</div>
+      </div>
+      <div class="menu-footer">v1.0 · 2026 · 深夜的三种温度</div>
+    </div>
+
+    <div id="game">
+      <div id="bg-layer"></div>
+      <div id="bg-filter" class="layer"></div>
+      <div id="char-layer"></div>
+      <div id="cg-layer"></div>
+      <div id="flash-overlay"></div>
+
+      <div id="hud">
+        <div class="hud-icon" id="hud-menu">☰</div>
+        <div id="pressure-hud">
+          <div class="label">
+            <span>考 研 压 力</span>
+            <span class="status-text" id="pressure-status">紧绷</span>
+          </div>
+          <div class="bar-bg"><div class="bar-fill" id="pressure-fill"></div></div>
+          <div class="value" id="pressure-value">50 / 100</div>
+        </div>
+        <div class="hud-icon" id="hud-auto">A</div>
+      </div>
+
+      <div id="auto-indicator">AUTO 播放中</div>
+      <div id="skip-indicator">跳过已读</div>
+
+      <div id="dialogue-layer">
+        <div id="speaker-name" class="hidden">旁白</div>
+        <div id="dialogue-box">
+          <div id="dialogue-text"></div>
+          <div id="next-indicator">▼</div>
+        </div>
+      </div>
+
+      <div id="choice-layer"></div>
+    </div>
+
+    <div id="pause-menu">
+      <div class="pause-title">暂 停</div>
+      <div class="menu-btn" id="pause-resume">继 续 游 戏</div>
+      <div class="menu-btn" id="pause-save">保 存 进 度</div>
+      <div class="menu-btn" id="pause-load">读 取 进 度</div>
+      <div class="menu-btn" id="pause-history">历 史 记 录</div>
+      <div class="menu-btn" id="pause-settings">设 置</div>
+      <div class="menu-btn" id="pause-mainmenu">返 回 主 菜 单</div>
+      <div class="menu-btn" id="pause-close">关 闭</div>
+    </div>
+
+    <div class="panel" id="panel-settings">
+      <div class="panel-header">
+        <div class="panel-title">设 置</div>
+        <div class="panel-close" data-close="panel-settings">×</div>
+      </div>
+      <div class="panel-body">
+        <div class="setting-item">
+          <div class="setting-head">
+            <label>文字速度</label>
+            <span class="setting-value" id="val-text-speed">30ms</span>
+          </div>
+          <input type="range" id="set-text-speed" min="5" max="100" value="30">
+        </div>
+        <div class="setting-item">
+          <div class="setting-head">
+            <label>自动播放间隔</label>
+            <span class="setting-value" id="val-auto-delay">1.8s</span>
+          </div>
+          <input type="range" id="set-auto-delay" min="500" max="5000" value="1800" step="100">
+        </div>
+        <div class="setting-item">
+          <div class="setting-head">
+            <label>背景音乐音量</label>
+            <span class="setting-value" id="val-bgm-vol">70%</span>
+          </div>
+          <input type="range" id="set-bgm-vol" min="0" max="100" value="70">
+        </div>
+        <div class="setting-item">
+          <div class="setting-head">
+            <label>音效音量</label>
+            <span class="setting-value" id="val-sfx-vol">80%</span>
+          </div>
+          <input type="range" id="set-sfx-vol" min="0" max="100" value="80">
+        </div>
+        <div class="setting-item">
+          <div class="setting-head">
+            <label>语音音量</label>
+            <span class="setting-value" id="val-voice-vol">100%</span>
+          </div>
+          <input type="range" id="set-voice-vol" min="0" max="100" value="100">
+        </div>
+        <div class="setting-toggle">
+          <span>跳过已读文本</span>
+          <div class="toggle-switch on" id="set-skip-read"></div>
+        </div>
+        <div class="setting-toggle">
+          <span>显示压力值 HUD</span>
+          <div class="toggle-switch on" id="set-show-pressure"></div>
+        </div>
+        <div class="setting-toggle">
+          <span>立绘说话高亮</span>
+          <div class="toggle-switch on" id="set-highlight"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel" id="panel-save">
+      <div class="panel-header">
+        <div class="panel-title" id="save-panel-title">存 档</div>
+        <div class="panel-close" data-close="panel-save">×</div>
+      </div>
+      <div class="panel-body" id="save-slots"></div>
+    </div>
+
+    <div class="panel" id="panel-gallery">
+      <div class="panel-header">
+        <div class="panel-title">画 廊 回 忆</div>
+        <div class="panel-close" data-close="panel-gallery">×</div>
+      </div>
+      <div class="panel-body">
+        <div class="gallery-grid" id="gallery-grid"></div>
+      </div>
+    </div>
+
+    <div class="panel" id="panel-history">
+      <div class="panel-header">
+        <div class="panel-title">历 史 记 录</div>
+        <div class="panel-close" data-close="panel-history">×</div>
+      </div>
+      <div class="panel-body" id="history-body"></div>
+    </div>
+
+    <div id="cg-viewer">
+      <div class="cg-viewer-close" id="cg-viewer-close">×</div>
+      <div id="cg-viewer-content"></div>
+      <div class="cg-viewer-title" id="cg-viewer-title"></div>
+    </div>
+
+    <div id="ending">
+      <div class="particles" id="ending-particles"></div>
+      <div class="ending-title" id="ending-title">结 局</div>
+      <div class="ending-desc" id="ending-desc"></div>
+      <div class="ending-btn" id="ending-return">返 回 主 菜 单</div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+"use strict";
+
+/* ============================================================
+   全局配置
+   ============================================================ */
+const CONFIG = {
+  DESIGN_W: 1080,
+  DESIGN_H: 1920,
+  PATHS: {
+    bg: "assets/bg/",
+    girl1: "assets/sprites/girl1/",
+    girl2: "assets/sprites/girl2/",
+    girl3: "assets/sprites/girl3/",
+    cg: "assets/sprites/cg/",
+    bgm: "assets/bgm/",
+    sfx: "assets/sfx/",
+    voice: "assets/voice/"
+  },
+  TEXT_SPEED: 30,
+  AUTO_DELAY: 1800,
+  TYPING_SOUND: true,
+  HIGHLIGHT_SPEAKER: true,
+  STATS: {
+    PRESSURE_MIN: 0,
+    PRESSURE_MAX: 100,
+    PRESSURE_INIT: 50,
+    AFF_MIN: 0,
+    AFF_MAX: 100,
+    AFF_INIT: 0
+  },
+  SAVE_SLOTS: 6,
+  STORAGE_PREFIX: "kyjs_"
+};
+
+/* ============================================================
+   立绘素材清单
+   ============================================================ */
+const SPRITE_CONFIG = {
+  "G1.01": { format: "auto", playOnce: false },
+  "G1.02": { format: "auto", playOnce: false },
+  "G1.03": { format: "auto", playOnce: false },
+  "G1.04": { format: "auto", playOnce: false },
+  "G1.05": { format: "auto", playOnce: true  },
+  "G1.06": { format: "auto", playOnce: true  },
+  "G1.07": { format: "auto", playOnce: false },
+  "G1.08": { format: "auto", playOnce: false },
+  "G1.09": { format: "auto", playOnce: true  },
+  "G1.10": { format: "auto", playOnce: false },
+  "G2.01": { format: "auto", playOnce: false },
+  "G2.02": { format: "auto", playOnce: false },
+  "G2.03": { format: "auto", playOnce: true  },
+  "G2.04": { format: "auto", playOnce: false },
+  "G2.05": { format: "auto", playOnce: true  },
+  "G2.06": { format: "auto", playOnce: false },
+  "G2.07": { format: "auto", playOnce: true  },
+  "G2.08": { format: "auto", playOnce: false },
+  "G3.01": { format: "auto", playOnce: false },
+  "G3.02": { format: "auto", playOnce: false },
+  "G3.03": { format: "auto", playOnce: false },
+  "G3.04": { format: "auto", playOnce: true  },
+  "G3.05": { format: "auto", playOnce: false },
+  "G3.06": { format: "auto", playOnce: true  },
+  "GC1":   { format: "auto", playOnce: false }
+};
+
+const BG_LIST = [
+  { id: "BG01", name: "图书馆·白天",     filter: "cold" },
+  { id: "BG02", name: "走廊·黄昏",       filter: "warm" },
+  { id: "BG03", name: "天台·黄昏",       filter: "warm" },
+  { id: "BG04", name: "出租屋·夜",       filter: "warm" },
+  { id: "BG05", name: "图书馆·停电",     filter: "dark" },
+  { id: "BG06", name: "图书馆门口·夜",   filter: "rain" },
+  { id: "BG07", name: "酒吧·夜",         filter: "warm" },
+  { id: "BG08", name: "出租屋门口·雨夜", filter: "rain" },
+  { id: "BG09", name: "天台·深夜",       filter: "dark" },
+  { id: "BG10", name: "雪景",            filter: "cold" }
+];
+
+const BGM_LIST = ["bgm_pressure","bgm_tense","bgm_jazz","bgm_warm","bgm_sad","bgm_ending"];
+const SFX_LIST = ["click","hover","rain","rain_light","thunder","page","vibrate","heartbeat","lighter","glass","footsteps","emergency","typing","choice","confirm","unlock"];
+
+const CG_DEFINITIONS = [
+  { id: "CG01", name: "天台的风",   desc: "许婉线第一幕隐藏" },
+  { id: "CG02", name: "雨夜的倔强", desc: "顾霜线第二幕隐藏" },
+  { id: "CG03", name: "天台的微醺", desc: "许婉线第二幕隐藏" },
+  { id: "CG04", name: "学妹的秘密", desc: "小夏线第二幕隐藏" },
+  { id: "CG05", name: "并肩的战友", desc: "结局A·顾霜线" },
+  { id: "CG06", name: "天台的花店", desc: "结局B·许婉线" },
+  { id: "CG07", name: "深夜的灯光", desc: "结局C·小夏线" },
+  { id: "CG08", name: "限定的夏日", desc: "隐藏结局·三人同行" }
+];
+
+/* ============================================================
+   全局状态
+   ============================================================ */
+const STATE = {
+  pressure: CONFIG.STATS.PRESSURE_INIT,
+  affection: { girl1: 0, girl2: 0, girl3: 0 },
+  currentNodeId: null,
+  previousNodeId: null,
+  currentBg: null,
+  currentBgFilter: "cold",
+  currentChars: [],
+  currentSpeaker: null,
+  currentBgm: null,
+  currentCg: null,
+  isTyping: false,
+  typingTimer: null,
+  typingText: "",
+  typingIndex: 0,
+  isAutoMode: false,
+  isSkipMode: false,
+  autoTimer: null,
+  isWaitingChoice: false,
+  isBlocking: false,
+  history: [],
+  readNodes: {},
+  unlockedCG: {},
+  unlockedEndings: {},
+  visitCount: {},
+  settings: {
+    textSpeed: CONFIG.TEXT_SPEED,
+    autoDelay: CONFIG.AUTO_DELAY,
+    bgmVolume: 0.7,
+    sfxVolume: 0.8,
+    voiceVolume: 1.0,
+    skipRead: true,
+    showPressure: true,
+    highlight: true
+  },
+  inGame: false,
+  currentSlot: null,
+  audioUnlocked: false
+};
+
+/* ============================================================
+   Web Audio 音频合成引擎
+   ============================================================ */
+const WebAudioMgr = {
+  ctx: null, masterGain: null, bgmGain: null, sfxGain: null, voiceGain: null,
+  bgmTimer: null, bgmPlaying: null, bgmStep: 0,
+
+  init() {
+    try {
+      const AC = window.AudioContext || window.webkitAudioContext;
+      if (!AC) return false;
+      this.ctx = new AC();
+      this.masterGain = this.ctx.createGain();
+      this.masterGain.gain.value = 1;
+      this.masterGain.connect(this.ctx.destination);
+      this.bgmGain = this.ctx.createGain();
+      this.bgmGain.gain.value = STATE.settings.bgmVolume * 0.5;
+      this.bgmGain.connect(this.masterGain);
+      this.sfxGain = this.ctx.createGain();
+      this.sfxGain.gain.value = STATE.settings.sfxVolume;
+      this.sfxGain.connect(this.masterGain);
+      this.voiceGain = this.ctx.createGain();
+      this.voiceGain.gain.value = STATE.settings.voiceVolume;
+      this.voiceGain.connect(this.masterGain);
+      return true;
+    } catch(e) { return false; }
+  },
+
+  resume() {
+    if (this.ctx && this.ctx.state === "suspended") this.ctx.resume();
+  },
+
+  createOsc(type, freq, duration, gainValue, when, target) {
+    const t0 = when || this.ctx.currentTime;
+    const osc = this.ctx.createOscillator();
+    const gain = this.ctx.createGain();
+    osc.type = type;
+    osc.frequency.value = freq;
+    gain.gain.setValueAtTime(0, t0);
+    gain.gain.linearRampToValueAtTime(gainValue, t0 + 0.01);
+    gain.gain.exponentialRampToValueAtTime(0.001, t0 + duration);
+    osc.connect(gain);
+    gain.connect(target || this.sfxGain);
+    osc.start(t0);
+    osc.stop(t0 + duration + 0.05);
+    return { osc, gain };
+  },
+
+  createNoise(duration, gainValue, when, filterType, filterFreq) {
+    const t0 = when || this.ctx.currentTime;
+    const sampleRate = this.ctx.sampleRate;
+    const length = sampleRate * duration;
+    const buffer = this.ctx.createBuffer(1, length, sampleRate);
+    const data = buffer.getChannelData(0);
+    for (let i = 0; i < length; i++) data[i] = Math.random() * 2 - 1;
+    const noise = this.ctx.createBufferSource();
+    noise.buffer = buffer;
+    const gain = this.ctx.createGain();
+    gain.gain.setValueAtTime(gainValue, t0);
+    gain.gain.exponentialRampToValueAtTime(0.001, t0 + duration);
+    let lastNode = noise;
+    if (filterType) {
+      const filter = this.ctx.createBiquadFilter();
+      filter.type = filterType;
+      filter.frequency.value = filterFreq || 1000;
+      lastNode.connect(filter);
+      lastNode = filter;
+    }
+    lastNode.connect(gain);
+    gain.connect(this.sfxGain);
+    noise.start(t0);
+    noise.stop(t0 + duration + 0.05);
+    return { noise, gain };
+  },
+
+  sfx: {
+    click() { const t = WebAudioMgr.ctx.currentTime; WebAudioMgr.createOsc("square", 1800, 0.04, 0.15, t); WebAudioMgr.createOsc("sine", 2400, 0.03, 0.1, t + 0.01); },
+    hover() { WebAudioMgr.createOsc("sine", 900, 0.06, 0.06); },
+    rain() { const t = WebAudioMgr.ctx.currentTime; WebAudioMgr.createNoise(2.0, 0.08, t, "lowpass", 800); WebAudioMgr.createNoise(2.0, 0.04, t + 0.5, "lowpass", 1200); },
+    rain_light() { WebAudioMgr.createNoise(1.5, 0.04, undefined, "lowpass", 600); },
+    thunder() { const t = WebAudioMgr.ctx.currentTime; WebAudioMgr.createNoise(1.2, 0.3, t, "lowpass", 120); WebAudioMgr.createOsc("sine", 60, 1.0, 0.15, t); WebAudioMgr.createOsc("sine", 45, 1.5, 0.1, t + 0.1); },
+    page() { const t = WebAudioMgr.ctx.currentTime; WebAudioMgr.createNoise(0.15, 0.15, t, "highpass", 2000); WebAudioMgr.createNoise(0.1, 0.1, t + 0.08, "bandpass", 3000); },
+    vibrate() { const t = WebAudioMgr.ctx.currentTime; WebAudioMgr.createOsc("sine", 80, 0.15, 0.25, t); WebAudioMgr.createOsc("sine", 100, 0.15, 0.2, t + 0.2); WebAudioMgr.createOsc("sine", 80, 0.15, 0.25, t + 0.4); },
+    heartbeat() { const t = WebAudioMgr.ctx.currentTime; WebAudioMgr.createOsc("sine", 70, 0.15, 0.4, t); WebAudioMgr.createOsc("sine", 60, 0.2, 0.3, t + 0.25); },
+    lighter() { const t = WebAudioMgr.ctx.currentTime; WebAudioMgr.createNoise(0.08, 0.2, t, "highpass", 3000); WebAudioMgr.createOsc("square", 2200, 0.05, 0.12, t + 0.02); WebAudioMgr.createOsc("sine", 1200, 0.08, 0.1, t + 0.05); },
+    glass() { const t = WebAudioMgr.ctx.currentTime; WebAudioMgr.createOsc("sine", 3200, 0.15, 0.2, t); WebAudioMgr.createOsc("sine", 4400, 0.1, 0.12, t + 0.01); WebAudioMgr.createOsc("sine", 2600, 0.12, 0.1, t + 0.02); },
+    footsteps() { const t = WebAudioMgr.ctx.currentTime; WebAudioMgr.createNoise(0.08, 0.15, t, "lowpass", 300); WebAudioMgr.createNoise(0.08, 0.12, t + 0.3, "lowpass", 280); },
+    emergency() { const t = WebAudioMgr.ctx.currentTime; WebAudioMgr.createOsc("square", 800, 0.15, 0.12, t); WebAudioMgr.createOsc("square", 600, 0.15, 0.12, t + 0.2); WebAudioMgr.createOsc("square", 800, 0.15, 0.12, t + 0.4); },
+    typing() { WebAudioMgr.createOsc("square", 1200 + Math.random() * 200, 0.015, 0.04); },
+    choice() { const t = WebAudioMgr.ctx.currentTime; WebAudioMgr.createOsc("triangle", 660, 0.08, 0.12, t); WebAudioMgr.createOsc("triangle", 880, 0.1, 0.1, t + 0.08); },
+    confirm() { const t = WebAudioMgr.ctx.currentTime; WebAudioMgr.createOsc("sine", 660, 0.1, 0.15, t); WebAudioMgr.createOsc("sine", 990, 0.15, 0.15, t + 0.1); },
+    unlock() { const t = WebAudioMgr.ctx.currentTime; [523, 659, 784, 1046].forEach((f, i) => WebAudioMgr.createOsc("triangle", f, 0.2, 0.12, t + i * 0.08)); }
+  },
+
+  playSfx(name) {
+    if (!this.ctx) return;
+    if (this.ctx.state === "suspended") this.ctx.resume();
+    const fn = this.sfx[name];
+    if (fn) { try { fn.call(this.sfx); } catch(e) {} }
+  },
+
+  bgmDefs: {
+    bgm_pressure: {
+      bpm: 70,
+      loop: [
+        { note: "A3", dur: 1.5, type: "sine" }, { note: "G3", dur: 0.5, type: "sine" },
+        { note: "F3", dur: 1.5, type: "sine" }, { note: "E3", dur: 1.0, type: "sine" },
+        { note: "D3", dur: 1.5, type: "sine" }, { note: "E3", dur: 0.5, type: "sine" },
+        { note: "C3", dur: 1.5, type: "sine" }, { note: "A2", dur: 1.0, type: "sine" }
+      ],
+      chords: [
+        { notes: ["A2","E3","A3"], dur: 2.0 }, { notes: ["F2","C3","F3"], dur: 2.0 },
+        { notes: ["D3","A3","D4"], dur: 2.0 }, { notes: ["E3","B3","E4"], dur: 2.0 }
+      ]
+    },
+    bgm_tense: {
+      bpm: 110,
+      loop: [
+        { note: "D3", dur: 0.25, type: "sawtooth" }, { note: "D3", dur: 0.25, type: "sawtooth" },
+        { note: "F3", dur: 0.25, type: "sawtooth" }, { note: "D3", dur: 0.25, type: "sawtooth" },
+        { note: "A3", dur: 0.25, type: "sawtooth" }, { note: "D3", dur: 0.25, type: "sawtooth" },
+        { note: "G3", dur: 0.25, type: "sawtooth" }, { note: "F3", dur: 0.25, type: "sawtooth" }
+      ],
+      chords: [
+        { notes: ["D2","A2","D3"], dur: 1.0 }, { notes: ["Bb2","F3","Bb3"], dur: 1.0 },
+        { notes: ["G2","D3","G3"], dur: 1.0 }, { notes: ["A2","E3","A3"], dur: 1.0 }
+      ]
+    },
+    bgm_jazz: {
+      bpm: 85,
+      loop: [
+        { note: "G3", dur: 0.5, type: "triangle" }, { note: "A3", dur: 0.5, type: "triangle" },
+        { note: "Bb3", dur: 1.0, type: "triangle" }, { note: "D4", dur: 0.5, type: "triangle" },
+        { note: "C4", dur: 0.5, type: "triangle" }, { note: "A3", dur: 1.0, type: "triangle" },
+        { note: "G3", dur: 0.5, type: "triangle" }, { note: "F3", dur: 0.5, type: "triangle" }
+      ],
+      chords: [
+        { notes: ["G2","D3","F3","B3"], dur: 2.0 }, { notes: ["C3","G3","Bb3","E4"], dur: 2.0 },
+        { notes: ["A2","E3","G3","C4"], dur: 2.0 }, { notes: ["D3","A3","C4","F4"], dur: 2.0 }
+      ]
+    },
+    bgm_warm: {
+      bpm: 75,
+      loop: [
+        { note: "C4", dur: 1.0, type: "sine" }, { note: "E4", dur: 1.0, type: "sine" },
+        { note: "G4", dur: 1.5, type: "sine" }, { note: "E4", dur: 0.5, type: "sine" },
+        { note: "F4", dur: 1.0, type: "sine" }, { note: "A4", dur: 1.0, type: "sine" },
+        { note: "G4", dur: 1.5, type: "sine" }, { note: "C4", dur: 0.5, type: "sine" }
+      ],
+      chords: [
+        { notes: ["C3","G3","C4"], dur: 2.0 }, { notes: ["F2","C3","F3"], dur: 2.0 },
+        { notes: ["A2","E3","A3"], dur: 2.0 }, { notes: ["G2","D3","G3"], dur: 2.0 }
+      ]
+    },
+    bgm_sad: {
+      bpm: 60,
+      loop: [
+        { note: "E3", dur: 2.0, type: "sine" }, { note: "G3", dur: 1.0, type: "sine" },
+        { note: "F3", dur: 2.0, type: "sine" }, { note: "E3", dur: 1.0, type: "sine" },
+        { note: "D3", dur: 2.0, type: "sine" }, { note: "B2", dur: 1.0, type: "sine" },
+        { note: "C3", dur: 2.0, type: "sine" }, { note: "E3", dur: 1.0, type: "sine" }
+      ],
+      chords: [
+        { notes: ["E2","B2","E3"], dur: 3.0 }, { notes: ["C2","G2","C3"], dur: 3.0 },
+        { notes: ["A2","E3","A3"], dur: 3.0 }, { notes: ["B2","F#3","B3"], dur: 3.0 }
+      ]
+    },
+    bgm_ending: {
+      bpm: 80,
+      loop: [
+        { note: "F4", dur: 1.0, type: "triangle" }, { note: "G4", dur: 1.0, type: "triangle" },
+        { note: "A4", dur: 1.0, type: "triangle" }, { note: "C5", dur: 1.5, type: "triangle" },
+        { note: "A4", dur: 0.5, type: "triangle" }, { note: "G4", dur: 1.0, type: "triangle" },
+        { note: "F4", dur: 1.0, type: "triangle" }, { note: "C4", dur: 1.0, type: "triangle" }
+      ],
+      chords: [
+        { notes: ["F3","C4","F4"], dur: 2.0 }, { notes: ["C3","G3","C4"], dur: 2.0 },
+        { notes: ["D3","A3","D4"], dur: 2.0 }, { notes: ["Bb2","F3","Bb3"], dur: 2.0 }
+      ]
+    }
+  },
+
+  noteFreq(note) {
+    const notes = { C:0, D:2, E:4, F:5, G:7, A:9, B:11 };
+    const m = note.match(/^([A-G])([#b]?)(\d)$/);
+    if (!m) return 440;
+    let semitone = notes[m[1]];
+    if (m[2] === "#") semitone += 1;
+    if (m[2] === "b") semitone -= 1;
+    const octave = parseInt(m[3]);
+    const midi = (octave + 1) * 12 + semitone;
+    return 440 * Math.pow(2, (midi - 69) / 12);
+  },
+
+  playBgm(name) {
+    if (!this.ctx) return;
+    if (this.ctx.state === "suspended") this.ctx.resume();
+    if (this.bgmPlaying === name) return;
+    if (this.bgmPlaying) {
+      this.bgmPlaying = null;
+      if (this.bgmTimer) { clearInterval(this.bgmTimer); this.bgmTimer = null; }
+    }
+    const def = this.bgmDefs[name];
+    if (!def) { this.bgmPlaying = name; return; }
+    this.bgmPlaying = name;
+    const beatDur = 60 / def.bpm;
+    const loopDur = def.loop.reduce((sum, n) => sum + n.dur, 0) * beatDur;
+    const playLoop = () => {
+      if (this.bgmPlaying !== name) return;
+      const t0 = this.ctx.currentTime;
+      let cursor = t0;
+      def.loop.forEach(item => {
+        const freq = this.noteFreq(item.note);
+        const dur = item.dur * beatDur;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = item.type;
+        osc.frequency.value = freq;
+        gain.gain.setValueAtTime(0, cursor);
+        gain.gain.linearRampToValueAtTime(0.08, cursor + 0.02);
+        gain.gain.linearRampToValueAtTime(0.06, cursor + dur * 0.6);
+        gain.gain.linearRampToValueAtTime(0, cursor + dur * 0.95);
+        osc.connect(gain);
+        gain.connect(this.bgmGain);
+        osc.start(cursor);
+        osc.stop(cursor + dur);
+        cursor += dur;
+      });
+      let chordCursor = t0;
+      def.chords.forEach(chord => {
+        const dur = chord.dur * beatDur;
+        chord.notes.forEach(note => {
+          const freq = this.noteFreq(note);
+          const osc = this.ctx.createOscillator();
+          const gain = this.ctx.createGain();
+          osc.type = "sine";
+          osc.frequency.value = freq;
+          gain.gain.setValueAtTime(0, chordCursor);
+          gain.gain.linearRampToValueAtTime(0.03, chordCursor + 0.05);
+          gain.gain.linearRampToValueAtTime(0.02, chordCursor + dur * 0.7);
+          gain.gain.linearRampToValueAtTime(0, chordCursor + dur * 0.95);
+          osc.connect(gain);
+          gain.connect(this.bgmGain);
+          osc.start(chordCursor);
+          osc.stop(chordCursor + dur);
+        });
+        chordCursor += dur;
+      });
+    };
+    playLoop();
+    this.bgmTimer = setInterval(playLoop, loopDur * 1000);
+  },
+
+  stopBgm() {
+    this.bgmPlaying = null;
+    if (this.bgmTimer) { clearInterval(this.bgmTimer); this.bgmTimer = null; }
+  },
+
+  setBgmVolume(v) { STATE.settings.bgmVolume = v; if (this.bgmGain) this.bgmGain.gain.value = v * 0.5; },
+  setSfxVolume(v) { STATE.settings.sfxVolume = v; if (this.sfxGain) this.sfxGain.gain.value = v; },
+  setVoiceVolume(v) { STATE.settings.voiceVolume = v; if (this.voiceGain) this.voiceGain.gain.value = v; }
+};
+
+/* ============================================================
+   资源加载器
+   ============================================================ */
+const Assets = {
+  cache: { bg: {}, sprite: {}, bgm: {}, sfx: {} },
+
+  loadImage(src, timeout = 2500) {
+    return new Promise(resolve => {
+      const img = new Image();
+      let done = false;
+      const finish = (ok) => {
+        if (done) return;
+        done = true;
+        resolve(ok ? img : null);
+      };
+      img.onload = () => finish(true);
+      img.onerror = () => finish(false);
+      img.src = src;
+      setTimeout(() => finish(false), timeout);
+    });
+  },
+
+  async loadBg(bgId) {
+    if (this.cache.bg[bgId]) return this.cache.bg[bgId];
+    let img = await this.loadImage(CONFIG.PATHS.bg + bgId + ".jpg");
+    if (!img) img = await this.loadImage(CONFIG.PATHS.bg + bgId + ".jpeg");
+    if (!img) img = await this.loadImage(CONFIG.PATHS.bg + bgId + ".png");
+    if (img) this.cache.bg[bgId] = img;
+    return img;
+  },
+
+  probeVideo(src, timeout = 2500) {
+    return new Promise(resolve => {
+      const v = document.createElement("video");
+      v.preload = "metadata";
+      v.muted = true;
+      let done = false;
+      const finish = (ok) => {
+        if (done) return;
+        done = true;
+        try { v.src = ""; } catch(e) {}
+        resolve(ok);
+      };
+      v.onloadedmetadata = () => finish(true);
+      v.onerror = () => finish(false);
+      v.src = src;
+      setTimeout(() => finish(false), timeout);
+    });
+  },
+
+  async resolveSprite(spriteId) {
+    if (this.cache.sprite[spriteId]) return this.cache.sprite[spriteId];
+    const cfg = SPRITE_CONFIG[spriteId] || { format: "auto", playOnce: false };
+    const prefix = spriteId.split(".")[0];
+    const pathMap = {
+      "G1": CONFIG.PATHS.girl1, "G2": CONFIG.PATHS.girl2,
+      "G3": CONFIG.PATHS.girl3, "GC": CONFIG.PATHS.cg
+    };
+    const basePath = pathMap[prefix] || CONFIG.PATHS.girl1;
+
+    if (cfg.format === "png") {
+      const img = await this.loadImage(basePath + spriteId + ".png");
+      if (img) {
+        const result = { type: "img", src: img.src, el: img, playOnce: cfg.playOnce };
+        this.cache.sprite[spriteId] = result;
+        return result;
+      }
+      return null;
+    }
+
+    if (cfg.format === "webm") {
+      const webmSrc = basePath + spriteId + ".webm";
+      const ok = await this.probeVideo(webmSrc);
+      if (ok) {
+        const result = { type: "video", src: webmSrc, playOnce: cfg.playOnce };
+        this.cache.sprite[spriteId] = result;
+        return result;
+      }
+      const img = await this.loadImage(basePath + spriteId + ".png");
+      if (img) {
+        const result = { type: "img", src: img.src, el: img, playOnce: cfg.playOnce };
+        this.cache.sprite[spriteId] = result;
+        return result;
+      }
+      return null;
+    }
+
+    const webmSrc = basePath + spriteId + ".webm";
+    const ok = await this.probeVideo(webmSrc);
+    if (ok) {
+      const result = { type: "video", src: webmSrc, playOnce: cfg.playOnce };
+      this.cache.sprite[spriteId] = result;
+      return result;
+    }
+    const img = await this.loadImage(basePath + spriteId + ".png");
+    if (img) {
+      const result = { type: "img", src: img.src, el: img, playOnce: cfg.playOnce };
+      this.cache.sprite[spriteId] = result;
+      return result;
+    }
+    return null;
+  },
+
+  async preloadAll(onProgress) {
+    const bgTasks = BG_LIST.map(bg => async () => { await this.loadBg(bg.id); });
+    const spriteTasks = Object.keys(SPRITE_CONFIG).map(id => async () => { await this.resolveSprite(id); });
+    const tasks = [...bgTasks, ...spriteTasks];
+    const total = tasks.length;
+    let done = 0;
+    const startTime = Date.now();
+    const HARD_TIMEOUT = 12000;
+    const TASK_TIMEOUT = 2500;
+
+    for (const t of tasks) {
+      if (Date.now() - startTime > HARD_TIMEOUT) {
+        done = total;
+        if (onProgress) onProgress(1);
+        break;
+      }
+      try {
+        await Promise.race([
+          t(),
+          new Promise(resolve => setTimeout(resolve, TASK_TIMEOUT))
+        ]);
+      } catch(e) {}
+      done++;
+      if (onProgress) onProgress(done / total);
+    }
+  },
+
+  async preloadNode(nodeId) {
+    const node = SCRIPT[nodeId];
+    if (!node) return;
+    if (node.bg) await this.loadBg(node.bg);
+    if (node.chars && node.chars.length) {
+      for (const c of node.chars) await this.resolveSprite(c.sprite);
+    }
+    if (node.cg) await this.resolveSprite(node.cg);
+  },
+
+  preloadNodes(nodeIds) {
+    nodeIds.forEach(id => {
+      this.preloadNode(id).catch(() => {});
+    });
+  }
+};
+
+
+/* ============================================================
+   ★★★★★ 剧本数据 ★★★★★
+   ============================================================ */
+const SCRIPT = {};
+
+/* ---------- 序章 ---------- */
+SCRIPT["start"] = {
+  bg: "BG01", bgm: "bgm_pressure", sfx: ["rain"],
+  chars: [],
+  speaker: null,
+  text: "距离考研还有80天。窗外的雨下个不停，图书馆里只有翻书声和压抑的叹息。",
+  next: "prologue_01"
+};
+
+SCRIPT["prologue_01"] = {
+  chars: [],
+  speaker: null,
+  text: "我盯着模拟卷上刺眼的红叉。数学，45分。",
+  next: "prologue_02"
+};
+
+SCRIPT["prologue_02"] = {
+  chars: [{ sprite: "G1.02", pos: "center" }],
+  speaker: "顾霜",
+  text: "数学45分？你还敢在这发呆？不想考了就趁早去投简历。",
+  voice: "vo_prologue_02.mp3",
+  next: "prologue_03"
+};
+
+SCRIPT["prologue_03"] = {
+  chars: [{ sprite: "G1.02", pos: "center" }],
+  speaker: null,
+  text: "顾霜重重合上书。她是我的死对头，同专业，目标院校和我一模一样。",
+  next: "prologue_04"
+};
+
+SCRIPT["prologue_04"] = {
+  chars: [
+    { sprite: "G1.02", pos: "right" },
+    { sprite: "G2.01", pos: "left" }
+  ],
+  speaker: "许婉",
+  text: "哟，小霜，别骂了。学弟脑子笨也不是一天两天了。走，陪学姐去天台透透气？",
+  voice: "vo_prologue_04.mp3",
+  next: "prologue_05"
+};
+
+SCRIPT["prologue_05"] = {
+  chars: [
+    { sprite: "G1.02", pos: "right" },
+    { sprite: "G2.01", pos: "left" }
+  ],
+  speaker: null,
+  text: "许婉靠在门框上，手里转着打火机。保研失败后，她就一直在摆烂。",
+  next: "prologue_06"
+};
+
+SCRIPT["prologue_06"] = {
+  chars: [
+    { sprite: "G1.02", pos: "right" },
+    { sprite: "G3.01", pos: "left" }
+  ],
+  speaker: "江小夏",
+  text: "学长！你别难过，我给你买了咖啡，还有我的重点笔记！",
+  voice: "vo_prologue_06.mp3",
+  next: "prologue_07"
+};
+
+SCRIPT["prologue_07"] = {
+  chars: [
+    { sprite: "G1.02", pos: "right" },
+    { sprite: "G3.01", pos: "left" }
+  ],
+  speaker: null,
+  text: "江小夏，大三学妹。明明拿到了大厂的offer，却天天泡在图书馆陪我。",
+  next: "prologue_08"
+};
+
+SCRIPT["prologue_08"] = {
+  chars: [
+    { sprite: "G1.02", pos: "right" },
+    { sprite: "G2.01", pos: "far-left" },
+    { sprite: "G3.01", pos: "far-right" }
+  ],
+  speaker: null,
+  text: "三个人的目光同时落在我身上。",
+  next: "prologue_choice"
+};
+
+SCRIPT["prologue_choice"] = {
+  speaker: null, text: "",
+  choices: [
+    { text: "拿过小夏的笔记，对顾霜说：“我今天开始死磕。”", effect: { pressure: 15, girl1: 20, girl3: -10, girl2: -5 }, next: "act1_gu_01" },
+    { text: "无视顾霜，跟着许婉去天台透气。", effect: { pressure: -15, girl2: 20, girl1: -10, girl3: -5 }, next: "act1_xu_01" },
+    { text: "揉揉太阳穴，对所有人说：“我有点累，先回去了。”", effect: { pressure: -5, girl1: -5, girl2: -5, girl3: -5 }, next: "act1_xia_01" }
+  ]
+};
+
+/* ---------- 第一幕 · 顾霜线 ---------- */
+SCRIPT["act1_gu_01"] = {
+  bg: "BG02", bgm: "bgm_pressure", sfx: [],
+  chars: [{ sprite: "G1.04", pos: "center" }],
+  speaker: null,
+  text: "傍晚，教学楼楼道。夕照从窗户斜射进来。",
+  next: "act1_gu_02"
+};
+
+SCRIPT["act1_gu_02"] = {
+  chars: [{ sprite: "G1.04", pos: "center" }],
+  speaker: null,
+  text: "顾霜给我讲数学题。她靠得很近，我能闻到她发梢淡淡的洗发水味。",
+  next: "act1_gu_03"
+};
+
+SCRIPT["act1_gu_03"] = {
+  chars: [{ sprite: "G1.03", pos: "center" }],
+  speaker: "顾霜",
+  text: "看什么看，看题！",
+  voice: "vo_act1_gu_03.mp3",
+  next: "act1_gu_choice"
+};
+
+SCRIPT["act1_gu_choice"] = {
+  speaker: null, text: "",
+  choices: [
+    { text: "继续硬刚：“你讲得太快了，再讲一遍。”", effect: { pressure: 10, girl1: 15 }, next: "act1_gu_04a" },
+    { text: "坦诚：“其实我今天状态很差，谢谢你陪我。”", effect: { pressure: -5, girl1: 20 }, next: "act1_gu_04b" },
+    { text: "逃避：“算了，今天不学了，我去找许婉喝酒。”", effect: { pressure: -10, girl1: -15, girl2: 10 }, next: "act1_gu_04c" }
+  ]
+};
+
+SCRIPT["act1_gu_04a"] = {
+  chars: [{ sprite: "G1.03", pos: "center" }],
+  speaker: "顾霜",
+  text: "你……你笨死了！我再说一遍，听好了！",
+  next: "act1_end_01"
+};
+
+SCRIPT["act1_gu_04b"] = {
+  chars: [{ sprite: "G1.03", pos: "center" }],
+  speaker: "顾霜",
+  text: "……哼。谁让你说这种话的。专心看题。",
+  next: "act1_end_01"
+};
+
+SCRIPT["act1_gu_04c"] = {
+  chars: [{ sprite: "G1.02", pos: "center" }],
+  speaker: "顾霜",
+  text: "……滚。",
+  next: "act1_end_01"
+};
+
+/* ---------- 第一幕 · 许婉线 ---------- */
+SCRIPT["act1_xu_01"] = {
+  bg: "BG03", bgm: "bgm_jazz", sfx: [],
+  chars: [{ sprite: "G2.02", pos: "center" }],
+  speaker: null,
+  text: "天台风很大。许婉点燃一根烟，吐出一口烟圈，眼神在暮色里显得很空。",
+  next: "act1_xu_02"
+};
+
+SCRIPT["act1_xu_02"] = {
+  chars: [{ sprite: "G2.02", pos: "center" }],
+  speaker: "许婉",
+  text: "我爸妈非要送我去伦敦读金融。下个月的机票。",
+  voice: "vo_act1_xu_02.mp3",
+  next: "act1_xu_03"
+};
+
+SCRIPT["act1_xu_03"] = {
+  chars: [{ sprite: "G2.02", pos: "center" }],
+  speaker: "许婉",
+  text: "你懂那种感觉吗？明明不想去，却没有拒绝的理由。就像你现在，明明学不进去，还要在这死撑。",
+  voice: "vo_act1_xu_03.mp3",
+  next: "act1_xu_choice"
+};
+
+SCRIPT["act1_xu_choice"] = {
+  speaker: null, text: "",
+  choices: [
+    { text: "硬刚：“你至少还有出国这条路，我呢？我考不上就什么都不是！”", effect: { pressure: 15, girl2: 15 }, next: "act1_xu_04a" },
+    { text: "逃避：“别想那么多了，喝酒去。”", effect: { pressure: -10, girl2: 10 }, next: "act1_xu_04b" },
+    { text: "温柔：“那就别去了。留下来。”", effect: { pressure: -5, girl2: 20 }, next: "act1_xu_04c" },
+    { text: "握住她拿着烟的手，看着她的眼睛。", hidden: true, condition: { pressure: ">30", girl2: ">25" }, effect: { pressure: -20, girl2: 25 }, cg: "CG01", next: "act1_xu_cg" }
+  ]
+};
+
+SCRIPT["act1_xu_04a"] = {
+  chars: [{ sprite: "G2.01", pos: "center" }],
+  speaker: "许婉",
+  text: "……你说得对。我们都挺惨的。",
+  next: "act1_end_01"
+};
+
+SCRIPT["act1_xu_04b"] = {
+  chars: [{ sprite: "G2.01", pos: "center" }],
+  speaker: "许婉",
+  text: "好啊，走吧。今晚不醉不归。",
+  next: "act1_end_01"
+};
+
+SCRIPT["act1_xu_04c"] = {
+  chars: [{ sprite: "G2.03", pos: "center" }],
+  speaker: "许婉",
+  text: "……留下来？你养我啊，小学弟。",
+  next: "act1_end_01"
+};
+
+SCRIPT["act1_xu_cg"] = {
+  chars: [{ sprite: "G2.03", pos: "center" }],
+  speaker: null,
+  text: "天台风很大。她没有挣脱，任由烟灰落在手背上，只是静静地看着我。",
+  next: "act1_xu_cg_02"
+};
+
+SCRIPT["act1_xu_cg_02"] = {
+  chars: [{ sprite: "G2.03", pos: "center" }],
+  speaker: "许婉",
+  text: "你这个人……真的很讨厌。",
+  voice: "vo_act1_xu_cg_02.mp3",
+  next: "act1_end_01"
+};
+
+/* ---------- 第一幕 · 小夏线 ---------- */
+SCRIPT["act1_xia_01"] = {
+  bg: "BG08", bgm: "bgm_sad", sfx: ["rain"],
+  chars: [{ sprite: "G3.02", pos: "center" }],
+  speaker: null,
+  text: "深夜，出租屋楼下。小夏蹲在门口，浑身湿透，手里紧紧攥着保温袋。",
+  next: "act1_xia_02"
+};
+
+SCRIPT["act1_xia_02"] = {
+  chars: [{ sprite: "G3.02", pos: "center" }],
+  speaker: "江小夏",
+  text: "学长……我拿到了大厂的offer，可是如果我下个月去上班了，就没人给你带夜宵了……",
+  voice: "vo_act1_xia_02.mp3",
+  next: "act1_xia_03"
+};
+
+SCRIPT["act1_xia_03"] = {
+  chars: [{ sprite: "G3.02", pos: "center" }],
+  speaker: "江小夏",
+  text: "学长，你能不能……有一点点喜欢我？",
+  voice: "vo_act1_xia_03.mp3",
+  next: "act1_xia_choice"
+};
+
+SCRIPT["act1_xia_choice"] = {
+  speaker: null, text: "",
+  choices: [
+    { text: "狠心拒绝：“小夏，你该去上班。我们都别耽误对方。”", effect: { pressure: 15, girl3: -10 }, next: "act1_xia_04a" },
+    { text: "温柔接纳：“傻丫头，快进来擦擦头发。”", effect: { pressure: -10, girl3: 20 }, next: "act1_xia_04b" },
+    { text: "逃避：“……让我一个人静静。”", effect: { pressure: 5, girl3: -5 }, next: "act1_xia_04c" }
+  ]
+};
+
+SCRIPT["act1_xia_04a"] = {
+  chars: [{ sprite: "G3.02", pos: "center" }],
+  speaker: "江小夏",
+  text: "……嗯，我知道了。学长，加油。",
+  next: "act1_end_01"
+};
+
+SCRIPT["act1_xia_04b"] = {
+  bg: "BG04",
+  chars: [{ sprite: "G3.03", pos: "center" }],
+  speaker: "江小夏",
+  text: "诶嘿嘿……学长真好。",
+  next: "act1_end_01"
+};
+
+SCRIPT["act1_xia_04c"] = {
+  chars: [{ sprite: "G3.02", pos: "center" }],
+  speaker: "江小夏",
+  text: "……好。学长早点休息。",
+  next: "act1_end_01"
+};
+
+/* ---------- 第一幕 · 结尾 ---------- */
+SCRIPT["act1_end_01"] = {
+  bg: "BG04", bgm: "bgm_warm", sfx: [],
+  chars: [],
+  speaker: null,
+  text: "深夜回到出租屋。我躺在床上，手机亮着。",
+  next: "act1_end_02"
+};
+
+SCRIPT["act1_end_02"] = {
+  speaker: null,
+  text: "三条消息同时弹出。",
+  next: "act1_end_03"
+};
+
+SCRIPT["act1_end_03"] = {
+  speaker: "手机 · 顾霜",
+  text: "明天图书馆别迟到。",
+  next: "act1_end_04"
+};
+
+SCRIPT["act1_end_04"] = {
+  speaker: "手机 · 许婉",
+  text: "睡不着，出来喝酒？",
+  next: "act1_end_05"
+};
+
+SCRIPT["act1_end_05"] = {
+  speaker: "手机 · 江小夏",
+  text: "学长，明天我给你带早饭！",
+  next: "act1_end_choice"
+};
+
+SCRIPT["act1_end_choice"] = {
+  speaker: null, text: "",
+  choices: [
+    { text: "回复顾霜：“知道了，你也早点睡。”", effect: { pressure: 5, girl1: 10 }, next: "act2_start" },
+    { text: "回复许婉：“太晚了，改天吧。”", effect: { pressure: -5, girl2: 5 }, next: "act2_start" },
+    { text: "回复小夏：“谢谢，你也早点睡。”", effect: { pressure: -5, girl3: 10 }, next: "act2_start" }
+  ]
+};
+
+/* ---------- 第二幕 · 暴雨的抉择 ---------- */
+SCRIPT["act2_start"] = {
+  bg: "BG01", bgm: "bgm_tense", sfx: [],
+  chars: [],
+  speaker: null,
+  text: "距离考研还有40天。目标院校缩招。我把这条消息读了十遍，手心全是汗。",
+  next: "act2_start_02"
+};
+
+SCRIPT["act2_start_02"] = {
+  bg: "BG05", bgm: "bgm_tense", sfx: ["rain","thunder","emergency"],
+  chars: [],
+  speaker: null,
+  text: "深夜，图书馆突然停电。应急灯亮起，一片混乱。",
+  next: "act2_start_03"
+};
+
+SCRIPT["act2_start_03"] = {
+  chars: [
+    { sprite: "G1.07", pos: "center" },
+    { sprite: "G2.01", pos: "left" },
+    { sprite: "G3.01", pos: "right" }
+  ],
+  speaker: "顾霜",
+  text: "别走……",
+  voice: "vo_act2_start_03.mp3",
+  next: "act2_start_04"
+};
+
+SCRIPT["act2_start_04"] = {
+  chars: [
+    { sprite: "G1.07", pos: "center" },
+    { sprite: "G2.01", pos: "left" },
+    { sprite: "G3.01", pos: "right" }
+  ],
+  speaker: "许婉",
+  text: "小霜居然怕黑啊？学弟，还不赶紧英雄救美？",
+  voice: "vo_act2_start_04.mp3",
+  next: "act2_start_05"
+};
+
+SCRIPT["act2_start_05"] = {
+  chars: [
+    { sprite: "G1.07", pos: "center" },
+    { sprite: "G2.01", pos: "left" },
+    { sprite: "G3.01", pos: "right" }
+  ],
+  speaker: "江小夏",
+  text: "学长，我带了手电筒……",
+  voice: "vo_act2_start_05.mp3",
+  next: "act2_choice"
+};
+
+SCRIPT["act2_choice"] = {
+  speaker: null, text: "",
+  choices: [
+    { text: "留在原地安抚顾霜。", effect: { pressure: 10, girl1: 20, girl3: -5, girl2: -5 }, next: "act2_transition" },
+    { text: "走到许婉身边。", effect: { pressure: -5, girl2: 15, girl1: -15, girl3: -5 }, next: "act2_transition" },
+    { text: "把三人拉在一起：“都别逞强了。”", effect: { pressure: -10, girl1: 5, girl2: 5, girl3: 5 }, next: "act2_transition" }
+  ]
+};
+
+SCRIPT["act2_transition"] = {
+  bg: "BG06", bgm: "bgm_sad", sfx: ["rain_light"],
+  chars: [],
+  speaker: null,
+  text: "应急灯亮了十分钟后，图书馆恢复了供电。人群散去。",
+  next: "act2_transition_02"
+};
+
+SCRIPT["act2_transition_02"] = {
+  speaker: null,
+  text: "我站在图书馆门口，雨已经小了很多。空气里全是潮湿的泥土味。",
+  next: "act2_transition_03"
+};
+
+SCRIPT["act2_transition_03"] = {
+  speaker: null,
+  text: "手机震了一下。",
+  next: "act2_transition_04"
+};
+
+SCRIPT["act2_transition_04"] = {
+  speaker: null,
+  text: "我低头看了一眼，是她发来的消息。",
+  next: "act2_transition_route"
+};
+
+SCRIPT["act2_transition_route"] = {
+  speaker: null, text: "",
+  autoRoute: true
+};
+
+SCRIPT["act2_gu"] = {
+  bg: "BG02", bgm: "bgm_sad", sfx: [],
+  chars: [{ sprite: "G1.05", pos: "center" }],
+  speaker: null,
+  text: "我推开教学楼楼道的门。顾霜蹲在墙角，肩膀在发抖。",
+  next: "act2_gu_02"
+};
+
+SCRIPT["act2_gu_02"] = {
+  chars: [{ sprite: "G1.05", pos: "center" }],
+  speaker: "顾霜",
+  text: "我爸妈说女孩子考研没用……如果我考不上，是不是一切都完了？",
+  voice: "vo_act2_gu_02.mp3",
+  next: "act2_gu_choice"
+};
+
+SCRIPT["act2_gu_choice"] = {
+  speaker: null, text: "",
+  choices: [
+    { text: "硬刚：“你不会考不上的。我陪你。”", effect: { pressure: 10, girl1: 15 }, next: "act2_end_01" },
+    { text: "温柔：“考不上也没关系。你已经很努力了。”", effect: { pressure: -10, girl1: 20 }, next: "act2_end_01" },
+    { text: "伸手擦掉她脸上的泪，把她拉进怀里。", hidden: true, condition: { girl1: ">60", pressure: ">65" }, effect: { pressure: -25, girl1: 30 }, cg: "CG02", next: "act2_gu_cg" }
+  ]
+};
+
+SCRIPT["act2_gu_cg"] = {
+  chars: [{ sprite: "G1.06", pos: "center" }],
+  speaker: null,
+  text: "她身体僵住，慢慢抓紧我的衣角。",
+  next: "act2_gu_cg_02"
+};
+
+SCRIPT["act2_gu_cg_02"] = {
+  chars: [{ sprite: "G1.06", pos: "center" }],
+  speaker: "顾霜",
+  text: "……你这人，真讨厌。",
+  voice: "vo_act2_gu_cg_02.mp3",
+  next: "act2_end_01"
+};
+
+SCRIPT["act2_xu"] = {
+  bg: "BG07", bgm: "bgm_jazz", sfx: ["glass"],
+  chars: [{ sprite: "G2.04", pos: "center" }],
+  speaker: null,
+  text: "酒吧。许婉趴在吧台上，面前摆着两只空杯，脸颊泛红。",
+  next: "act2_xu_02"
+};
+
+SCRIPT["act2_xu_02"] = {
+  chars: [{ sprite: "G2.04", pos: "center" }],
+  speaker: "许婉",
+  text: "我下个月的机票……我不想走。",
+  voice: "vo_act2_xu_02.mp3",
+  next: "act2_xu_03"
+};
+
+SCRIPT["act2_xu_03"] = {
+  chars: [{ sprite: "G2.04", pos: "center" }],
+  speaker: "许婉",
+  text: "如果我留下来，你能多看看我吗？",
+  voice: "vo_act2_xu_03.mp3",
+  next: "act2_xu_choice"
+};
+
+SCRIPT["act2_xu_choice"] = {
+  speaker: null, text: "",
+  choices: [
+    { text: "硬刚：“你别走。留下来陪我。”", effect: { pressure: -10, girl2: 15 }, next: "act2_end_01" },
+    { text: "温柔：“学姐，你醉了。我送你回去。”", effect: { pressure: -5, girl2: 10 }, next: "act2_end_01" },
+    { text: "低头吻掉她眼角的泪。", hidden: true, condition: { girl2: ">60", pressure: "<40" }, effect: { pressure: -20, girl2: 30 }, cg: "CG03", next: "act2_xu_cg" }
+  ]
+};
+
+SCRIPT["act2_xu_cg"] = {
+  chars: [{ sprite: "G2.05", pos: "center" }],
+  speaker: null,
+  text: "她愣住，随后笑着流泪。",
+  next: "act2_xu_cg_02"
+};
+
+SCRIPT["act2_xu_cg_02"] = {
+  chars: [{ sprite: "G2.05", pos: "center" }],
+  speaker: "许婉",
+  text: "你真是个傻子。",
+  voice: "vo_act2_xu_cg_02.mp3",
+  next: "act2_end_01"
+};
+
+SCRIPT["act2_xia"] = {
+  bg: "BG04", bgm: "bgm_warm", sfx: [],
+  chars: [{ sprite: "G3.03", pos: "center" }],
+  speaker: null,
+  text: "出租屋。小夏坐在沙发上困得揉眼睛，手里还握着我的旧打火机。",
+  next: "act2_xia_02"
+};
+
+SCRIPT["act2_xia_02"] = {
+  chars: [{ sprite: "G3.03", pos: "center" }],
+  speaker: "江小夏",
+  text: "学长……你回来了。我好困……但我想等你。",
+  voice: "vo_act2_xia_02.mp3",
+  next: "act2_xia_choice"
+};
+
+SCRIPT["act2_xia_choice"] = {
+  speaker: null, text: "",
+  choices: [
+    { text: "硬刚：“小夏，你该回去了。”", effect: { pressure: 10, girl3: -10 }, next: "act2_end_01" },
+    { text: "温柔：“给她盖好毯子，坐在旁边。”", effect: { pressure: -10, girl3: 20 }, next: "act2_end_01" },
+    { text: "看着她安静的睡颜，轻轻拨开她脸颊上的碎发。", hidden: true, condition: { girl3: ">60", pressure: ">65" }, effect: { pressure: -20, girl3: 30 }, cg: "CG04", next: "act2_xia_cg" }
+  ]
+};
+
+SCRIPT["act2_xia_cg"] = {
+  chars: [{ sprite: "G3.04", pos: "center" }],
+  speaker: null,
+  text: "她其实没睡着。睫毛在颤抖，红着脸不敢睁眼，呼吸却乱了。",
+  next: "act2_xia_cg_02"
+};
+
+SCRIPT["act2_xia_cg_02"] = {
+  chars: [{ sprite: "G3.04", pos: "center" }],
+  speaker: "江小夏",
+  text: "……学长，你、你都看到了？",
+  voice: "vo_act2_xia_cg_02.mp3",
+  next: "act2_end_01"
+};
+
+SCRIPT["act2_end_01"] = {
+  bg: "BG04", bgm: "bgm_sad", sfx: [],
+  chars: [],
+  speaker: null,
+  text: "距离考研还有10天。调剂系统开放的倒计时，和心跳一样快。",
+  next: "act3_start"
+};
+
+/* ---------- 第三幕 · 面具的脱落 ---------- */
+SCRIPT["act3_start"] = {
+  bg: "BG04", bgm: "bgm_tense", sfx: ["vibrate"],
+  chars: [],
+  speaker: null,
+  text: "凌晨两点。我刚做完最后一套卷子，头疼欲裂。",
+  next: "act3_start_02"
+};
+
+SCRIPT["act3_start_02"] = {
+  speaker: null,
+  text: "手机里只有一条消息——来自我最在意的那个人。",
+  next: "act3_route"
+};
+
+SCRIPT["act3_route"] = {
+  speaker: null, text: "",
+  autoRoute3: true
+};
+
+SCRIPT["act3_gu"] = {
+  bg: "BG02", bgm: "bgm_sad", sfx: [],
+  chars: [{ sprite: "G1.08", pos: "center" }],
+  speaker: null,
+  text: "图书馆楼道。顾霜站在窗边，手里拿着一张纸，看到我来了，别过头。",
+  next: "act3_gu_02"
+};
+
+SCRIPT["act3_gu_02"] = {
+  chars: [{ sprite: "G1.08", pos: "center" }],
+  speaker: "顾霜",
+  text: "别多想。我只是不想看你死得太惨。",
+  voice: "vo_act3_gu_02.mp3",
+  next: "act3_gu_choice"
+};
+
+SCRIPT["act3_gu_choice"] = {
+  speaker: null, text: "",
+  choices: [
+    { text: "硬刚：“我不会让你失望的。”", effect: { pressure: 10, girl1: 15 }, next: "act3_end" },
+    { text: "温柔：“顾霜，谢谢你。真的。”", effect: { pressure: -10, girl1: 20 }, next: "act3_end" },
+    { text: "握住她的手：“考完试，我有话跟你说。”", hidden: true, condition: { girl1: ">80", pressure: ">70" }, effect: { pressure: -25, girl1: 25 }, cg: "CG05", next: "act3_gu_cg" }
+  ]
+};
+
+SCRIPT["act3_gu_cg"] = {
+  chars: [{ sprite: "G1.09", pos: "center" }],
+  speaker: null,
+  text: "她的手很凉。她没有甩开，只是抬头看着我，眼神闪烁。",
+  next: "act3_gu_cg_02"
+};
+
+SCRIPT["act3_gu_cg_02"] = {
+  chars: [{ sprite: "G1.09", pos: "center" }],
+  speaker: "顾霜",
+  text: "……好。我等你。",
+  voice: "vo_act3_gu_cg_02.mp3",
+  next: "act3_end"
+};
+
+SCRIPT["act3_xu"] = {
+  bg: "BG09", bgm: "bgm_jazz", sfx: [],
+  chars: [{ sprite: "G2.06", pos: "center" }],
+  speaker: null,
+  text: "深夜天台。许婉站在栏杆边，手里拿着那张机票，被风吹得哗哗作响。",
+  next: "act3_xu_02"
+};
+
+SCRIPT["act3_xu_02"] = {
+  chars: [{ sprite: "G2.06", pos: "center" }],
+  speaker: "许婉",
+  text: "我不去了。不管结果怎么样，学姐都在这里等你。",
+  voice: "vo_act3_xu_02.mp3",
+  next: "act3_xu_choice"
+};
+
+SCRIPT["act3_xu_choice"] = {
+  speaker: null, text: "",
+  choices: [
+    { text: "硬刚：“你别冲动。”", effect: { pressure: 10, girl2: 10 }, next: "act3_end" },
+    { text: "温柔：“等我考完，我陪你去找花店。”", effect: { pressure: -15, girl2: 25 }, next: "act3_end" },
+    { text: "抱住她：“谢谢你留下来。”", hidden: true, condition: { girl2: ">80", pressure: "<40" }, effect: { pressure: -20, girl2: 25 }, cg: "CG06", next: "act3_xu_cg" }
+  ]
+};
+
+SCRIPT["act3_xu_cg"] = {
+  chars: [{ sprite: "G2.07", pos: "center" }],
+  speaker: null,
+  text: "她愣了一下，然后轻轻靠进我的怀里。",
+  next: "act3_xu_cg_02"
+};
+
+SCRIPT["act3_xu_cg_02"] = {
+  chars: [{ sprite: "G2.07", pos: "center" }],
+  speaker: "许婉",
+  text: "……真拿你没办法。",
+  voice: "vo_act3_xu_cg_02.mp3",
+  next: "act3_end"
+};
+
+SCRIPT["act3_xia"] = {
+  bg: "BG04", bgm: "bgm_warm", sfx: [],
+  chars: [{ sprite: "G3.05", pos: "center" }],
+  speaker: null,
+  text: "出租屋门口。小夏端着一碗热汤，鼻子冻得红红的。",
+  next: "act3_xia_02"
+};
+
+SCRIPT["act3_xia_02"] = {
+  chars: [{ sprite: "G3.05", pos: "center" }],
+  speaker: "江小夏",
+  text: "学长，不管考没考上，我都给你做一辈子夜宵！",
+  voice: "vo_act3_xia_02.mp3",
+  next: "act3_xia_choice"
+};
+
+SCRIPT["act3_xia_choice"] = {
+  speaker: null, text: "",
+  choices: [
+    { text: "硬刚：“小夏，你别这样。我压力很大。”", effect: { pressure: 10, girl3: -10 }, next: "act3_end" },
+    { text: "温柔：“傻丫头。等我考完。”", effect: { pressure: -10, girl3: 20 }, next: "act3_end" },
+    { text: "把她拉进怀里：“好。一辈子。”", hidden: true, condition: { girl3: ">80", pressure: ">70" }, effect: { pressure: -25, girl3: 25 }, cg: "CG07", next: "act3_xia_cg" }
+  ]
+};
+
+SCRIPT["act3_xia_cg"] = {
+  chars: [{ sprite: "G3.06", pos: "center" }],
+  speaker: null,
+  text: "她身体一顿，然后紧紧抓住我的衣角，把脸埋进我的胸口。",
+  next: "act3_xia_cg_02"
+};
+
+SCRIPT["act3_xia_cg_02"] = {
+  chars: [{ sprite: "G3.06", pos: "center" }],
+  speaker: "江小夏",
+  text: "……学长，我等你。",
+  voice: "vo_act3_xia_cg_02.mp3",
+  next: "act3_end"
+};
+
+SCRIPT["act3_end"] = {
+  bg: "BG04", bgm: "bgm_sad", sfx: [],
+  chars: [],
+  speaker: null,
+  text: "考研前夜。书桌上堆满了草稿纸，窗外的城市安静得可怕。",
+  next: "act3_end_02"
+};
+
+SCRIPT["act3_end_02"] = {
+  speaker: null,
+  text: "手机屏幕亮着。三条消息，静静地躺在那里。",
+  next: "act3_end_03"
+};
+
+SCRIPT["act3_end_03"] = {
+  speaker: "手机 · 顾霜",
+  text: "明天好好考。考上了，我请你吃饭。考不上……我也请你，安慰你。",
+  next: "act3_end_04"
+};
+
+SCRIPT["act3_end_04"] = {
+  speaker: "手机 · 许婉",
+  text: "不管结果怎么样，学姐都在这里等你。我不去伦敦了。",
+  next: "act3_end_05"
+};
+
+SCRIPT["act3_end_05"] = {
+  speaker: "手机 · 江小夏",
+  text: "学长，不管考没考上，我都给你做一辈子夜宵！",
+  next: "act3_ending_check"
+};
+
+SCRIPT["act3_ending_check"] = {
+  speaker: null, text: "",
+  autoEnding: true
+};
+
+/* ============================================================
+   工具函数
+   ============================================================ */
+const Utils = {
+  el(tag, cls, inner) {
+    const e = document.createElement(tag);
+    if (cls) e.className = cls;
+    if (inner !== undefined) e.innerHTML = inner;
+    return e;
+  },
+  delay(ms) { return new Promise(r => setTimeout(r, ms)); },
+  clamp(v, min, max) { return Math.max(min, Math.min(max, v)); },
+  clone(obj) { return JSON.parse(JSON.stringify(obj)); },
+  matchCondition(value, expr) {
+    if (expr === undefined || expr === null) return true;
+    if (typeof expr === "number") return value >= expr;
+    const m = String(expr).match(/^([<>]=?)(\d+)$/);
+    if (!m) return true;
+    const op = m[1];
+    const target = parseInt(m[2], 10);
+    switch (op) {
+      case ">":  return value > target;
+      case ">=": return value >= target;
+      case "<":  return value < target;
+      case "<=": return value <= target;
+      default:   return true;
+    }
+  },
+  formatTime(ts) {
+    const d = new Date(ts);
+    const pad = n => String(n).padStart(2, "0");
+    return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  }
+};
+
+/* ============================================================
+   音频管理器
+   ============================================================ */
+const AudioMgr = {
+  voiceEl: null,
+  init() { WebAudioMgr.init(); },
+  resume() { WebAudioMgr.resume(); },
+  playBgm(name) { WebAudioMgr.playBgm(name); STATE.currentBgm = name; },
+  stopBgm() { WebAudioMgr.stopBgm(); STATE.currentBgm = null; },
+  playSfx(name) { WebAudioMgr.playSfx(name); },
+  playVoice(name) {
+    if (!name) return;
+    this.stopVoice();
+    const src = CONFIG.PATHS.voice + name;
+    this.voiceEl = new Audio(src);
+    this.voiceEl.volume = STATE.settings.voiceVolume;
+    const p = this.voiceEl.play();
+    if (p && p.catch) p.catch(() => {});
+  },
+  stopVoice() {
+    if (this.voiceEl) {
+      try { this.voiceEl.pause(); } catch(e) {}
+      this.voiceEl = null;
+    }
+  },
+  setBgmVolume(v) { WebAudioMgr.setBgmVolume(v); },
+  setSfxVolume(v) { WebAudioMgr.setSfxVolume(v); },
+  setVoiceVolume(v) {
+    STATE.settings.voiceVolume = v;
+    WebAudioMgr.setVoiceVolume(v);
+    if (this.voiceEl) this.voiceEl.volume = v;
+  }
+};
+
+/* ============================================================
+   存档管理器
+   ============================================================ */
+const SaveMgr = {
+  key(slot) { return CONFIG.STORAGE_PREFIX + "save_" + slot; },
+  keySettings() { return CONFIG.STORAGE_PREFIX + "settings"; },
+  keyGlobal() { return CONFIG.STORAGE_PREFIX + "global"; },
+
+  save(slot) {
+    const data = {
+      version: 1, timestamp: Date.now(),
+      pressure: STATE.pressure,
+      affection: Utils.clone(STATE.affection),
+      currentNodeId: STATE.currentNodeId,
+      currentBg: STATE.currentBg,
+      currentBgFilter: STATE.currentBgFilter,
+      currentChars: STATE.currentChars.map(c => ({ sprite: c.sprite, pos: c.pos })),
+      currentSpeaker: STATE.currentSpeaker,
+      currentBgm: STATE.currentBgm,
+      history: STATE.history.slice(-60),
+      readNodes: Utils.clone(STATE.readNodes),
+      unlockedCG: Utils.clone(STATE.unlockedCG),
+      unlockedEndings: Utils.clone(STATE.unlockedEndings),
+      visitCount: Utils.clone(STATE.visitCount)
+    };
+    try {
+      localStorage.setItem(this.key(slot), JSON.stringify(data));
+      return true;
+    } catch(e) { return false; }
+  },
+
+  load(slot) {
+    try {
+      const raw = localStorage.getItem(this.key(slot));
+      if (!raw) return null;
+      return JSON.parse(raw);
+    } catch(e) { return null; }
+  },
+
+  info(slot) {
+    const d = this.load(slot);
+    if (!d) return null;
+    return { time: d.timestamp, pressure: d.pressure, affection: d.affection, nodeId: d.currentNodeId };
+  },
+
+  remove(slot) { localStorage.removeItem(this.key(slot)); },
+
+  hasAny() {
+    for (let i = 1; i <= CONFIG.SAVE_SLOTS; i++) {
+      if (this.load(i)) return true;
+    }
+    return false;
+  },
+
+  saveSettings() {
+    try { localStorage.setItem(this.keySettings(), JSON.stringify(STATE.settings)); } catch(e) {}
+  },
+
+  loadSettings() {
+    try {
+      const raw = localStorage.getItem(this.keySettings());
+      if (raw) Object.assign(STATE.settings, JSON.parse(raw));
+    } catch(e) {}
+  },
+
+  saveGlobal() {
+    try {
+      localStorage.setItem(this.keyGlobal(), JSON.stringify({
+        readNodes: STATE.readNodes,
+        unlockedCG: STATE.unlockedCG,
+        unlockedEndings: STATE.unlockedEndings
+      }));
+    } catch(e) {}
+  },
+
+  loadGlobal() {
+    try {
+      const raw = localStorage.getItem(this.keyGlobal());
+      if (raw) {
+        const g = JSON.parse(raw);
+        STATE.readNodes = g.readNodes || {};
+        STATE.unlockedCG = g.unlockedCG || {};
+        STATE.unlockedEndings = g.unlockedEndings || {};
+      }
+    } catch(e) {}
+  }
+};
+
+/* ============================================================
+   UI 管理器
+   ============================================================ */
+const UI = {
+  dom: {},
+
+  init() {
+    this.dom = {
+      loading: document.getElementById("loading"),
+      loadingBar: document.getElementById("loading-bar"),
+      loadingPercent: document.getElementById("loading-percent"),
+      loadingTip: document.getElementById("loading-tip"),
+      mainMenu: document.getElementById("main-menu"),
+      menuStart: document.getElementById("menu-start"),
+      menuContinue: document.getElementById("menu-continue"),
+      menuGallery: document.getElementById("menu-gallery"),
+      menuSettings: document.getElementById("menu-settings"),
+      game: document.getElementById("game"),
+      bgLayer: document.getElementById("bg-layer"),
+      bgFilter: document.getElementById("bg-filter"),
+      charLayer: document.getElementById("char-layer"),
+      cgLayer: document.getElementById("cg-layer"),
+      flashOverlay: document.getElementById("flash-overlay"),
+      hudMenu: document.getElementById("hud-menu"),
+      hudAuto: document.getElementById("hud-auto"),
+      pressureHud: document.getElementById("pressure-hud"),
+      pressureFill: document.getElementById("pressure-fill"),
+      pressureValue: document.getElementById("pressure-value"),
+      pressureStatus: document.getElementById("pressure-status"),
+      autoIndicator: document.getElementById("auto-indicator"),
+      skipIndicator: document.getElementById("skip-indicator"),
+      dialogueLayer: document.getElementById("dialogue-layer"),
+      speakerName: document.getElementById("speaker-name"),
+      dialogueText: document.getElementById("dialogue-text"),
+      nextIndicator: document.getElementById("next-indicator"),
+      choiceLayer: document.getElementById("choice-layer"),
+      pauseMenu: document.getElementById("pause-menu"),
+      pauseResume: document.getElementById("pause-resume"),
+      pauseSave: document.getElementById("pause-save"),
+      pauseLoad: document.getElementById("pause-load"),
+      pauseHistory: document.getElementById("pause-history"),
+      pauseSettings: document.getElementById("pause-settings"),
+      pauseMainmenu: document.getElementById("pause-mainmenu"),
+      pauseClose: document.getElementById("pause-close"),
+      panelSettings: document.getElementById("panel-settings"),
+      panelSave: document.getElementById("panel-save"),
+      panelGallery: document.getElementById("panel-gallery"),
+      panelHistory: document.getElementById("panel-history"),
+      savePanelTitle: document.getElementById("save-panel-title"),
+      saveSlots: document.getElementById("save-slots"),
+      galleryGrid: document.getElementById("gallery-grid"),
+      historyBody: document.getElementById("history-body"),
+      cgViewer: document.getElementById("cg-viewer"),
+      cgViewerContent: document.getElementById("cg-viewer-content"),
+      cgViewerTitle: document.getElementById("cg-viewer-title"),
+      cgViewerClose: document.getElementById("cg-viewer-close"),
+      ending: document.getElementById("ending"),
+      endingTitle: document.getElementById("ending-title"),
+      endingDesc: document.getElementById("ending-desc"),
+      endingReturn: document.getElementById("ending-return"),
+      endingParticles: document.getElementById("ending-particles")
+    };
+  },
+
+  setLoadingProgress(p) {
+    const pct = Math.floor(p * 100);
+    this.dom.loadingBar.style.width = pct + "%";
+    this.dom.loadingPercent.textContent = pct + "%";
+  },
+
+  hideLoading() {
+    this.dom.loading.classList.add("hidden");
+    setTimeout(() => { this.dom.loading.style.display = "none"; }, 900);
+  },
+
+  showMainMenu() { this.dom.mainMenu.classList.remove("hidden"); },
+  hideMainMenu() { this.dom.mainMenu.classList.add("hidden"); },
+  showGame() { this.dom.game.classList.add("active"); },
+  hideGame() { this.dom.game.classList.remove("active"); },
+
+  updatePressure() {
+    const p = STATE.pressure;
+    this.dom.pressureFill.style.width = p + "%";
+    this.dom.pressureValue.textContent = p + " / 100";
+    let status = "松弛";
+    if (p >= 80) status = "崩溃边缘";
+    else if (p >= 65) status = "紧绷";
+    else if (p >= 40) status = "正常";
+    else if (p >= 20) status = "放松";
+    else status = "松弛";
+    this.dom.pressureStatus.textContent = status;
+  },
+
+  togglePressureHud(show) {
+    if (show) this.dom.pressureHud.classList.remove("hidden");
+    else this.dom.pressureHud.classList.add("hidden");
+  },
+
+  floatText(text, type, x, y) {
+    const el = Utils.el("div", "float-text " + type, text);
+    el.style.left = (x || 50) + "%";
+    el.style.top = (y || 30) + "%";
+    document.getElementById("stage").appendChild(el);
+    setTimeout(() => el.remove(), 1700);
+  },
+
+  shake() {
+    const stage = document.getElementById("stage");
+    stage.classList.add("shake");
+    setTimeout(() => stage.classList.remove("shake"), 500);
+  },
+
+  flash() {
+    this.dom.flashOverlay.classList.remove("flash");
+    void this.dom.flashOverlay.offsetWidth;
+    this.dom.flashOverlay.classList.add("flash");
+  },
+
+  openPanel(id) { const el = document.getElementById(id); if (el) el.classList.add("active"); },
+  closePanel(id) { const el = document.getElementById(id); if (el) el.classList.remove("active"); },
+  closeAllPanels() {
+    ["panel-settings", "panel-save", "panel-gallery", "panel-history"].forEach(id => this.closePanel(id));
+    this.dom.pauseMenu.classList.remove("active");
+    this.dom.cgViewer.classList.remove("active");
+  },
+
+  showEnding(title, desc) {
+    this.dom.endingTitle.textContent = title;
+    this.dom.endingDesc.textContent = desc;
+    this.dom.ending.classList.add("active");
+    this.dom.endingParticles.innerHTML = "";
+    for (let i = 0; i < 40; i++) {
+      const p = Utils.el("span");
+      p.style.left = Math.random() * 100 + "%";
+      p.style.animationDuration = (3 + Math.random() * 4) + "s";
+      p.style.animationDelay = Math.random() * 3 + "s";
+      p.style.opacity = 0.3 + Math.random() * 0.6;
+      const size = 0.4 + Math.random() * 0.8;
+      p.style.width = size + "vw";
+      p.style.height = size + "vw";
+      this.dom.endingParticles.appendChild(p);
+    }
+  },
+
+  hideEnding() { this.dom.ending.classList.remove("active"); }
+};
+
+/* ============================================================
+   立绘管理器
+   ============================================================ */
+const CharMgr = {
+  async render(chars) {
+    const current = STATE.currentChars;
+    const oldMap = {};
+    current.forEach(c => { oldMap[c.sprite] = c; });
+    const newIds = chars.map(c => c.sprite);
+
+    for (const key in oldMap) {
+      if (!newIds.includes(key)) {
+        const el = oldMap[key].el;
+        if (el) {
+          el.classList.remove("visible");
+          el.classList.add("hidden-pos");
+          setTimeout(() => el.remove(), 600);
+        }
+      }
+    }
+
+    const newChars = [];
+    for (const ch of chars) {
+      const existing = oldMap[ch.sprite];
+      if (existing) {
+        if (existing.pos !== ch.pos) {
+          existing.el.className = "char-slot pos-" + ch.pos + " visible";
+          existing.pos = ch.pos;
+        }
+        newChars.push(existing);
+      } else {
+        const slot = await this.createSlot(ch);
+        if (slot) newChars.push(slot);
+      }
+    }
+    STATE.currentChars = newChars;
+  },
+
+  async createSlot(ch) {
+    const resolved = await Assets.resolveSprite(ch.sprite);
+    if (!resolved) return null;
+    const slot = Utils.el("div", "char-slot pos-" + ch.pos + " entering");
+    let el;
+    if (resolved.type === "video") {
+      const v = document.createElement("video");
+      v.src = resolved.src;
+      v.muted = true;
+      v.playsInline = true;
+      v.autoplay = true;
+      v.loop = !resolved.playOnce;
+      if (resolved.playOnce) v.addEventListener("ended", () => { v.pause(); });
+      el = v;
+    } else {
+      const img = document.createElement("img");
+      img.src = resolved.src;
+      el = img;
+    }
+    slot.appendChild(el);
+    UI.dom.charLayer.appendChild(slot);
+    requestAnimationFrame(() => {
+      setTimeout(() => {
+        slot.classList.remove("entering");
+        slot.classList.add("visible");
+      }, 30);
+    });
+    if (el.play) {
+      const p = el.play();
+      if (p && p.catch) p.catch(() => {});
+    }
+    return { sprite: ch.sprite, pos: ch.pos, el: slot, playOnce: resolved.playOnce };
+  },
+
+  clear() {
+    STATE.currentChars.forEach(c => {
+      if (c.el) {
+        c.el.classList.remove("visible");
+        c.el.classList.add("hidden-pos");
+        setTimeout(() => c.el.remove(), 600);
+      }
+    });
+    STATE.currentChars = [];
+  },
+
+  highlight(speaker) {
+    if (!STATE.settings.highlight) return;
+    STATE.currentChars.forEach(c => { c.el.classList.remove("speaking"); });
+    if (!speaker) return;
+    let targetPrefix = null;
+    if (speaker === "顾霜") targetPrefix = "G1";
+    else if (speaker === "许婉") targetPrefix = "G2";
+    else if (speaker === "江小夏") targetPrefix = "G3";
+    if (targetPrefix) {
+      STATE.currentChars.forEach(c => {
+        if (c.sprite.startsWith(targetPrefix)) c.el.classList.add("speaking");
+      });
+    }
+  }
+};
+
+/* ============================================================
+   对话系统
+   ============================================================ */
+const Dialogue = {
+  async show(node) {
+    if (node.bg && node.bg !== STATE.currentBg) {
+      await this.changeBg(node.bg);
+    }
+    if (node.bg) {
+      const bgDef = BG_LIST.find(b => b.id === node.bg);
+      if (bgDef && bgDef.filter) {
+        UI.dom.bgFilter.className = "layer " + bgDef.filter;
+        STATE.currentBgFilter = bgDef.filter;
+      }
+    }
+    if (node.bgm && node.bgm !== STATE.currentBgm) {
+      AudioMgr.playBgm(node.bgm);
+    }
+    if (node.sfx && node.sfx.length) {
+      node.sfx.forEach(s => AudioMgr.playSfx(s));
+    }
+    if (node.chars !== undefined) {
+      await CharMgr.render(node.chars);
+    }
+    if (node.cg) {
+      await this.showCG(node.cg);
+    }
+    if (node.speaker) {
+      UI.dom.speakerName.textContent = node.speaker;
+      UI.dom.speakerName.classList.remove("hidden");
+    } else {
+      UI.dom.speakerName.classList.add("hidden");
+    }
+    CharMgr.highlight(node.speaker);
+    if (node.voice) {
+      AudioMgr.playVoice(node.voice);
+    } else {
+      AudioMgr.stopVoice();
+    }
+    UI.dom.dialogueLayer.classList.add("active");
+    UI.dom.nextIndicator.classList.remove("show");
+    if (node.text && node.text.trim()) {
+      STATE.history.push({ speaker: node.speaker || "", text: node.text });
+    }
+    await this.typeText(node.text || "");
+    this.onTypingEnd(node);
+  },
+
+  typeText(text) {
+    return new Promise(resolve => {
+      STATE.isTyping = true;
+      STATE.typingText = text;
+      STATE.typingIndex = 0;
+      UI.dom.dialogueText.innerHTML = "";
+      clearInterval(STATE.typingTimer);
+
+      if (!text) { STATE.isTyping = false; resolve(); return; }
+
+      const nodeId = STATE.currentNodeId;
+      if (STATE.settings.skipRead && STATE.readNodes[nodeId] && STATE.isSkipMode) {
+        UI.dom.dialogueText.textContent = text;
+        STATE.isTyping = false;
+        resolve();
+        return;
+      }
+
+      const speed = STATE.settings.textSpeed;
+      let tick = 0;
+      STATE.typingTimer = setInterval(() => {
+        if (STATE.typingIndex >= text.length) {
+          clearInterval(STATE.typingTimer);
+          STATE.isTyping = false;
+          resolve();
+          return;
+        }
+        STATE.typingIndex++;
+        UI.dom.dialogueText.textContent = text.substring(0, STATE.typingIndex);
+        tick++;
+        if (CONFIG.TYPING_SOUND && tick % 3 === 0) AudioMgr.playSfx("typing");
+      }, speed);
+    });
+  },
+
+  finishTyping() {
+    if (!STATE.isTyping) return false;
+    clearInterval(STATE.typingTimer);
+    UI.dom.dialogueText.textContent = STATE.typingText;
+    STATE.isTyping = false;
+    const node = SCRIPT[STATE.currentNodeId];
+    if (node) this.onTypingEnd(node);
+    return true;
+  },
+
+  onTypingEnd(node) {
+    UI.dom.nextIndicator.classList.add("show");
+    if (node.choices && node.choices.length > 0) {
+      setTimeout(() => this.showChoices(node.choices), 250);
+      return;
+    }
+    if (STATE.isAutoMode) {
+      clearTimeout(STATE.autoTimer);
+      STATE.autoTimer = setTimeout(() => this.advance(), STATE.settings.autoDelay);
+    }
+  },
+
+  changeBg(bgId) {
+    return new Promise(resolve => {
+      const layer = UI.dom.bgLayer;
+      layer.classList.add("fading");
+      setTimeout(() => {
+        const img = Assets.cache.bg[bgId];
+        if (img) {
+          layer.style.backgroundImage = `url(${img.src})`;
+        } else {
+          layer.style.backgroundImage = `url(${CONFIG.PATHS.bg}${bgId}.jpg)`;
+        }
+        STATE.currentBg = bgId;
+        layer.classList.remove("fading");
+        setTimeout(resolve, 400);
+      }, 400);
+    });
+  },
+
+  showCG(cgId) {
+    return new Promise(async resolve => {
+      STATE.isBlocking = true;
+      const resolved = await Assets.resolveSprite(cgId);
+      if (!resolved) {
+        STATE.isBlocking = false;
+        resolve();
+        return;
+      }
+      const layer = UI.dom.cgLayer;
+      layer.innerHTML = "";
+      let el;
+      if (resolved.type === "video") {
+        const v = document.createElement("video");
+        v.src = resolved.src;
+        v.muted = true;
+        v.playsInline = true;
+        v.autoplay = true;
+        v.loop = !resolved.playOnce;
+        el = v;
+      } else {
+        const img = document.createElement("img");
+        img.src = resolved.src;
+        el = img;
+      }
+      layer.appendChild(el);
+      layer.classList.add("active");
+      layer.classList.remove("closing");
+      STATE.unlockedCG[cgId] = true;
+      SaveMgr.saveGlobal();
+      if (el.play) {
+        const p = el.play();
+        if (p && p.catch) p.catch(() => {});
+      }
+      setTimeout(() => {
+        layer.classList.add("closing");
+        setTimeout(() => {
+          layer.classList.remove("active");
+          layer.classList.remove("closing");
+          layer.innerHTML = "";
+          STATE.isBlocking = false;
+          resolve();
+        }, 600);
+      }, 3500);
+    });
+  },
+
+  showChoices(choices) {
+    const validChoices = choices.filter(c => {
+      if (!c.condition) return true;
+      const cond = c.condition;
+      if (cond.pressure && !Utils.matchCondition(STATE.pressure, cond.pressure)) return false;
+      if (cond.girl1 && !Utils.matchCondition(STATE.affection.girl1, cond.girl1)) return false;
+      if (cond.girl2 && !Utils.matchCondition(STATE.affection.girl2, cond.girl2)) return false;
+      if (cond.girl3 && !Utils.matchCondition(STATE.affection.girl3, cond.girl3)) return false;
+      return true;
+    });
+    const layer = UI.dom.choiceLayer;
+    layer.innerHTML = "";
+    validChoices.forEach(c => {
+      const btn = Utils.el("div", "choice-btn" + (c.hidden ? " hidden-choice" : ""), c.text);
+      btn.onclick = (e) => {
+        e.stopPropagation();
+        AudioMgr.playSfx("choice");
+        this.selectChoice(c);
+      };
+      layer.appendChild(btn);
+    });
+    STATE.isWaitingChoice = true;
+    layer.classList.add("active");
+  },
+
+  async selectChoice(choice) {
+    STATE.isWaitingChoice = false;
+    UI.dom.choiceLayer.classList.remove("active");
+    UI.dom.choiceLayer.innerHTML = "";
+    if (choice.effect) this.applyEffect(choice.effect);
+    STATE.history.push({ speaker: "你的选择", text: choice.text });
+    if (choice.cg) {
+      await this.showCG(choice.cg);
+    }
+    if (choice.next) {
+      setTimeout(() => Game.jumpTo(choice.next), 300);
+    }
+  },
+
+  applyEffect(effect) {
+    let pressureDelta = 0;
+    let girl1Delta = 0, girl2Delta = 0, girl3Delta = 0;
+    if (effect.pressure !== undefined) {
+      const before = STATE.pressure;
+      STATE.pressure = Utils.clamp(STATE.pressure + effect.pressure, CONFIG.STATS.PRESSURE_MIN, CONFIG.STATS.PRESSURE_MAX);
+      pressureDelta = STATE.pressure - before;
+    }
+    if (effect.girl1 !== undefined) {
+      const before = STATE.affection.girl1;
+      STATE.affection.girl1 = Utils.clamp(STATE.affection.girl1 + effect.girl1, CONFIG.STATS.AFF_MIN, CONFIG.STATS.AFF_MAX);
+      girl1Delta = STATE.affection.girl1 - before;
+    }
+    if (effect.girl2 !== undefined) {
+      const before = STATE.affection.girl2;
+      STATE.affection.girl2 = Utils.clamp(STATE.affection.girl2 + effect.girl2, CONFIG.STATS.AFF_MIN, CONFIG.STATS.AFF_MAX);
+      girl2Delta = STATE.affection.girl2 - before;
+    }
+    if (effect.girl3 !== undefined) {
+      const before = STATE.affection.girl3;
+      STATE.affection.girl3 = Utils.clamp(STATE.affection.girl3 + effect.girl3, CONFIG.STATS.AFF_MIN, CONFIG.STATS.AFF_MAX);
+      girl3Delta = STATE.affection.girl3 - before;
+    }
+    UI.updatePressure();
+    if (pressureDelta !== 0) {
+      const cls = pressureDelta > 0 ? "pressure-up" : "pressure-down";
+      const sign = pressureDelta > 0 ? "+" : "";
+      setTimeout(() => UI.floatText("压力 " + sign + pressureDelta, cls, 20, 25), 200);
+    }
+    if (girl1Delta !== 0) {
+      const cls = girl1Delta > 0 ? "positive" : "negative";
+      const sign = girl1Delta > 0 ? "+" : "";
+      setTimeout(() => UI.floatText("顾霜 " + sign + girl1Delta, cls, 20, 40), 400);
+    }
+    if (girl2Delta !== 0) {
+      const cls = girl2Delta > 0 ? "positive" : "negative";
+      const sign = girl2Delta > 0 ? "+" : "";
+      setTimeout(() => UI.floatText("许婉 " + sign + girl2Delta, cls, 50, 40), 550);
+    }
+    if (girl3Delta !== 0) {
+      const cls = girl3Delta > 0 ? "positive" : "negative";
+      const sign = girl3Delta > 0 ? "+" : "";
+      setTimeout(() => UI.floatText("小夏 " + sign + girl3Delta, cls, 80, 40), 700);
+    }
+  },
+
+  advance() {
+    if (STATE.isBlocking) return;
+    if (STATE.isWaitingChoice) return;
+    if (STATE.isTyping) {
+      this.finishTyping();
+      return;
+    }
+    const node = SCRIPT[STATE.currentNodeId];
+    if (!node) return;
+    if (node.next) Game.jumpTo(node.next);
+  }
+};
+
+/* ============================================================
+   游戏主控
+   ============================================================ */
+const Game = {
+  async boot() {
+    UI.init();
+    AudioMgr.init();
+    SaveMgr.loadSettings();
+    SaveMgr.loadGlobal();
+
+    UI.dom.menuStart.onclick = () => { AudioMgr.resume(); AudioMgr.playSfx("confirm"); this.startNewGame(); };
+    UI.dom.menuContinue.onclick = () => { AudioMgr.resume(); AudioMgr.playSfx("click"); this.openSavePanel("load"); };
+    UI.dom.menuGallery.onclick = () => { AudioMgr.resume(); AudioMgr.playSfx("click"); this.openGallery(); };
+    UI.dom.menuSettings.onclick = () => { AudioMgr.resume(); AudioMgr.playSfx("click"); UI.openPanel("panel-settings"); };
+
+    UI.dom.hudMenu.onclick = () => { AudioMgr.playSfx("click"); this.openPauseMenu(); };
+    UI.dom.hudAuto.onclick = () => { AudioMgr.playSfx("click"); this.toggleAuto(); };
+
+    UI.dom.dialogueLayer.onclick = () => { AudioMgr.resume(); Dialogue.advance(); };
+
+    UI.dom.pauseResume.onclick = () => { AudioMgr.playSfx("click"); UI.closePanel("pause-menu"); };
+    UI.dom.pauseSave.onclick = () => { AudioMgr.playSfx("click"); this.openSavePanel("save"); };
+    UI.dom.pauseLoad.onclick = () => { AudioMgr.playSfx("click"); this.openSavePanel("load"); };
+    UI.dom.pauseHistory.onclick = () => { AudioMgr.playSfx("click"); this.openHistory(); };
+    UI.dom.pauseSettings.onclick = () => { AudioMgr.playSfx("click"); UI.openPanel("panel-settings"); };
+    UI.dom.pauseMainmenu.onclick = () => { AudioMgr.playSfx("click"); this.returnToMainMenu(); };
+    UI.dom.pauseClose.onclick = () => { AudioMgr.playSfx("click"); UI.closePanel("pause-menu"); };
+
+    document.querySelectorAll("[data-close]").forEach(el => {
+      el.onclick = () => { AudioMgr.playSfx("click"); UI.closePanel(el.dataset.close); };
+    });
+
+    UI.dom.endingReturn.onclick = () => { AudioMgr.playSfx("click"); this.returnToMainMenu(); };
+    UI.dom.cgViewerClose.onclick = () => { AudioMgr.playSfx("click"); UI.dom.cgViewer.classList.remove("active"); };
+
+    this.bindSettings();
+
+    await Assets.preloadAll((p) => UI.setLoadingProgress(p));
+
+    setTimeout(() => {
+      UI.hideLoading();
+      UI.showMainMenu();
+      if (SaveMgr.hasAny()) UI.dom.menuContinue.classList.remove("disabled");
+      else UI.dom.menuContinue.classList.add("disabled");
+    }, 400);
+  },
+
+  startNewGame() {
+    STATE.pressure = CONFIG.STATS.PRESSURE_INIT;
+    STATE.affection = { girl1: 0, girl2: 0, girl3: 0 };
+    STATE.history = [];
+    STATE.visitCount = {};
+    STATE.currentNodeId = "start";
+    STATE.currentBg = null;
+    STATE.currentBgm = null;
+    STATE.currentChars = [];
+    STATE.isTyping = false;
+    STATE.isWaitingChoice = false;
+    STATE.isBlocking = false;
+    STATE.isAutoMode = false;
+    STATE.isSkipMode = false;
+    STATE.inGame = true;
+
+    UI.dom.charLayer.innerHTML = "";
+    UI.dom.cgLayer.innerHTML = "";
+    UI.dom.choiceLayer.innerHTML = "";
+
+    UI.closeAllPanels();
+    UI.hideMainMenu();
+    UI.hideEnding();
+    UI.showGame();
+    UI.updatePressure();
+    UI.togglePressureHud(STATE.settings.showPressure);
+
+    this.jumpTo("start");
+  },
+
+  async jumpTo(nodeId) {
+    const node = SCRIPT[nodeId];
+    if (!node) { console.warn("节点不存在:", nodeId); return; }
+
+    STATE.previousNodeId = STATE.currentNodeId;
+    STATE.currentNodeId = nodeId;
+
+    STATE.visitCount[nodeId] = (STATE.visitCount[nodeId] || 0) + 1;
+    STATE.readNodes[nodeId] = true;
+
+    if (node.autoRoute) {
+      const target = this.resolveRoute();
+      if (target) setTimeout(() => this.jumpTo(target), 100);
+      return;
+    }
+    if (node.autoRoute3) {
+      const target = this.resolveRoute3();
+      if (target) setTimeout(() => this.jumpTo(target), 100);
+      return;
+    }
+    if (node.autoEnding) {
+      setTimeout(() => this.resolveEnding(), 500);
+      return;
+    }
+    if (node.effect) Dialogue.applyEffect(node.effect);
+
+    await Dialogue.show(node);
+
+    this.preloadAhead(nodeId, 4);
+  },
+
+  preloadAhead(nodeId, depth = 4) {
+    const chain = this.collectNodeChain(nodeId, depth);
+    if (chain.length) Assets.preloadNodes(chain);
+  },
+
+  collectNodeChain(nodeId, depth) {
+    const result = new Set();
+    const visited = new Set();
+    const queue = [{ id: nodeId, d: 0 }];
+    while (queue.length) {
+      const { id, d } = queue.shift();
+      if (d > depth) continue;
+      if (visited.has(id)) continue;
+      visited.add(id);
+      const node = SCRIPT[id];
+      if (!node) continue;
+      result.add(id);
+      if (node.choices && node.choices.length) {
+        node.choices.forEach(c => { if (c.next) queue.push({ id: c.next, d: d + 1 }); });
+        continue;
+      }
+      if (node.autoRoute) {
+        queue.push({ id: "act2_gu", d: d + 1 });
+        queue.push({ id: "act2_xu", d: d + 1 });
+        queue.push({ id: "act2_xia", d: d + 1 });
+        continue;
+      }
+      if (node.autoRoute3) {
+        queue.push({ id: "act3_gu", d: d + 1 });
+        queue.push({ id: "act3_xu", d: d + 1 });
+        queue.push({ id: "act3_xia", d: d + 1 });
+        continue;
+      }
+      if (node.next) queue.push({ id: node.next, d: d + 1 });
+    }
+    result.delete(nodeId);
+    return Array.from(result);
+  },
+
+  resolveRoute() {
+    const a = STATE.affection;
+    const max = Math.max(a.girl1, a.girl2, a.girl3);
+    if (max < 20) {
+      const r = Math.floor(Math.random() * 3);
+      return ["act2_gu", "act2_xu", "act2_xia"][r];
+    }
+    if (max === a.girl1) return "act2_gu";
+    if (max === a.girl2) return "act2_xu";
+    return "act2_xia";
+  },
+
+  resolveRoute3() {
+    const a = STATE.affection;
+    const max = Math.max(a.girl1, a.girl2, a.girl3);
+    if (max < 20) {
+      const r = Math.floor(Math.random() * 3);
+      return ["act3_gu", "act3_xu", "act3_xia"][r];
+    }
+    if (max === a.girl1) return "act3_gu";
+    if (max === a.girl2) return "act3_xu";
+    return "act3_xia";
+  },
+
+  async resolveEnding() {
+    const p = STATE.pressure;
+    const a = STATE.affection;
+    let ending = null;
+
+    if (a.girl1 > 60 && a.girl2 > 60 && a.girl3 > 60 && p < 40) {
+      ending = {
+        id: "ending_together",
+        title: "隐藏结局 · 同 行",
+        cg: "CG08",
+        desc: "考研结束的那个晚上，你推开出租屋的门。三个女孩都在。\n\n顾霜翻着你的笔记，许婉靠在窗台拿啤酒，小夏在整理你散落的草稿纸。\n\n三个人同时抬头。\n\n顾霜先开口：“看什么看？考完了，该兑现你的承诺了。”\n\n许婉晃了晃酒：“今晚不醉不归，学弟。”\n\n小夏红着脸：“学长，我们三个商量好了……以后不管考研还是工作，你都不许躲着我们！”"
+      };
+    } else if (p > 80 && a.girl1 < 40 && a.girl2 < 40 && a.girl3 < 40) {
+      ending = {
+        id: "ending_bad",
+        title: "Bad End · 孤独的终点",
+        desc: "考研那天，你因为压力过大发挥失常。走出考场，手机里空无一人。\n\n你独自一人走在雪地里。",
+        bgm: "bgm_sad"
+      };
+    } else if (a.girl1 > 80 && a.girl2 < 60 && a.girl3 < 60) {
+      ending = {
+        id: "ending_gu",
+        title: "结局 A · 并肩的战友",
+        cg: "CG05",
+        desc: "你们考上了同一所大学的研究生。\n\n开学那天，她依然抱臂瞪你：“看什么看？还不快去占座。”\n\n她转过身，嘴角却偷偷地扬了起来。"
+      };
+    } else if (a.girl2 > 80 && a.girl1 < 60 && a.girl3 < 60) {
+      ending = {
+        id: "ending_xu",
+        title: "结局 B · 天台的花店",
+        cg: "CG06",
+        desc: "她退掉了去伦敦的机票，在学校旁边开了一家花店。\n\n你每天下课都去帮她浇水。\n\n某天她说：“学弟，花店的招牌上，要不要加上你的名字？”"
+      };
+    } else if (a.girl3 > 80 && a.girl1 < 60 && a.girl2 < 60) {
+      ending = {
+        id: "ending_xia",
+        title: "结局 C · 深夜的灯光",
+        cg: "CG07",
+        desc: "她放弃了大厂offer，留在本地找了个普通工作。\n\n每天晚上，出租屋里都有一盏灯和一碗热汤。\n\n“学长，无论考没考上，我都给你做一辈子夜宵！”"
+      };
+    } else {
+      ending = {
+        id: "ending_alone",
+        title: "结局 · 各奔东西",
+        desc: "考研结束。你们各自奔赴不同的人生。\n\n但那段深夜互相陪伴的日子，会一直在记忆里发光。"
+      };
+    }
+
+    STATE.unlockedEndings[ending.id] = true;
+    SaveMgr.saveGlobal();
+
+    if (ending.cg) await Dialogue.showCG(ending.cg);
+    AudioMgr.playBgm(ending.bgm || "bgm_ending");
+
+    setTimeout(() => UI.showEnding(ending.title, ending.desc), 500);
+  },
+
+  returnToMainMenu() {
+    UI.hideEnding();
+    UI.hideGame();
+    UI.closeAllPanels();
+    UI.showMainMenu();
+    AudioMgr.stopBgm();
+    AudioMgr.stopVoice();
+    STATE.inGame = false;
+    if (SaveMgr.hasAny()) UI.dom.menuContinue.classList.remove("disabled");
+    else UI.dom.menuContinue.classList.add("disabled");
+  },
+
+  openPauseMenu() { UI.dom.pauseMenu.classList.add("active"); },
+
+  toggleAuto() {
+    STATE.isAutoMode = !STATE.isAutoMode;
+    if (STATE.isAutoMode) {
+      UI.dom.autoIndicator.classList.add("active");
+      UI.dom.hudAuto.classList.add("active");
+      if (!STATE.isTyping && !STATE.isWaitingChoice) {
+        clearTimeout(STATE.autoTimer);
+        STATE.autoTimer = setTimeout(() => Dialogue.advance(), STATE.settings.autoDelay);
+      }
+    } else {
+      UI.dom.autoIndicator.classList.remove("active");
+      UI.dom.hudAuto.classList.remove("active");
+      clearTimeout(STATE.autoTimer);
+    }
+  },
+
+  openSavePanel(mode) {
+    UI.dom.savePanelTitle.textContent = mode === "save" ? "存 档" : "读 档";
+    const list = UI.dom.saveSlots;
+    list.innerHTML = "";
+    for (let i = 1; i <= CONFIG.SAVE_SLOTS; i++) {
+      const info = SaveMgr.info(i);
+      const slot = Utils.el("div", "save-slot");
+      const numEl = Utils.el("div", "slot-num", String(i));
+      slot.appendChild(numEl);
+      const infoEl = Utils.el("div", "slot-info");
+      if (info) {
+        infoEl.innerHTML = `<div class="slot-title">存档 ${i} · 压力 ${info.pressure}</div><div class="slot-time">${Utils.formatTime(info.time)}</div>`;
+      } else {
+        infoEl.innerHTML = `<div class="slot-empty">— 空 槽 位 —</div>`;
+      }
+      slot.appendChild(infoEl);
+      if (info) {
+        const del = Utils.el("div", "slot-del", "×");
+        del.onclick = (e) => {
+          e.stopPropagation();
+          if (confirm("确定删除此存档？")) {
+            SaveMgr.remove(i);
+            this.openSavePanel(mode);
+          }
+        };
+        slot.appendChild(del);
+      }
+      slot.onclick = () => {
+        if (mode === "save") {
+          if (SaveMgr.save(i)) {
+            AudioMgr.playSfx("confirm");
+            this.openSavePanel("save");
+          }
+        } else {
+          const data = SaveMgr.load(i);
+          if (data) this.loadFromData(data);
+        }
+      };
+      list.appendChild(slot);
+    }
+    UI.closePanel("pause-menu");
+    UI.openPanel("panel-save");
+  },
+
+  loadFromData(data) {
+    STATE.pressure = data.pressure;
+    STATE.affection = Utils.clone(data.affection);
+    STATE.currentNodeId = data.currentNodeId;
+    STATE.currentBg = null;
+    STATE.currentBgFilter = data.currentBgFilter || "cold";
+    STATE.currentBgm = null;
+    STATE.currentChars = [];
+    STATE.history = data.history || [];
+    STATE.readNodes = data.readNodes || {};
+    STATE.unlockedCG = data.unlockedCG || {};
+    STATE.unlockedEndings = data.unlockedEndings || {};
+    STATE.visitCount = data.visitCount || {};
+    STATE.inGame = true;
+    UI.dom.charLayer.innerHTML = "";
+    UI.dom.cgLayer.innerHTML = "";
+    UI.dom.choiceLayer.innerHTML = "";
+    UI.closeAllPanels();
+    UI.hideMainMenu();
+    UI.hideEnding();
+    UI.showGame();
+    UI.updatePressure();
+    UI.togglePressureHud(STATE.settings.showPressure);
+    this.jumpTo(data.currentNodeId);
+  },
+
+  openGallery() {
+    const grid = UI.dom.galleryGrid;
+    grid.innerHTML = "";
+    CG_DEFINITIONS.forEach(cg => {
+      const item = Utils.el("div", "gallery-item");
+      const unlocked = STATE.unlockedCG[cg.id];
+      if (unlocked) {
+        item.classList.add("unlocked");
+        const tryLoad = async () => {
+          let img = await Assets.loadImage(CONFIG.PATHS.cg + cg.id + ".jpg");
+          if (!img) img = await Assets.loadImage(CONFIG.PATHS.cg + cg.id + ".png");
+          if (img) item.insertBefore(img, item.firstChild);
+          else {
+            const locked = Utils.el("div", "locked", "?");
+            item.insertBefore(locked, item.firstChild);
+          }
+        };
+        tryLoad();
+      } else {
+        const locked = Utils.el("div", "locked", "?");
+        item.appendChild(locked);
+      }
+      const cap = Utils.el("div", "caption", unlocked ? cg.name : "？？？");
+      item.appendChild(cap);
+      item.onclick = () => {
+        if (!unlocked) return;
+        AudioMgr.playSfx("click");
+        UI.dom.cgViewerContent.innerHTML = "";
+        const tryLoadFull = async () => {
+          let img = await Assets.loadImage(CONFIG.PATHS.cg + cg.id + ".jpg");
+          if (!img) img = await Assets.loadImage(CONFIG.PATHS.cg + cg.id + ".png");
+          if (img) UI.dom.cgViewerContent.appendChild(img);
+          else UI.dom.cgViewerContent.innerHTML = "<div style='color:#888;padding:40px;text-align:center;font-size:4vw'>图片未加载</div>";
+        };
+        tryLoadFull();
+        UI.dom.cgViewerTitle.textContent = cg.name;
+        UI.dom.cgViewer.classList.add("active");
+      };
+      grid.appendChild(item);
+    });
+    UI.openPanel("panel-gallery");
+  },
+
+  openHistory() {
+    const body = UI.dom.historyBody;
+    body.innerHTML = "";
+    if (STATE.history.length === 0) {
+      body.innerHTML = "<div style='color:#666;text-align:center;padding:40px;font-size:3.5vw'>暂无历史记录</div>";
+    } else {
+      STATE.history.slice().reverse().forEach(h => {
+        const entry = Utils.el("div", "history-entry");
+        if (h.speaker) entry.appendChild(Utils.el("div", "history-speaker", h.speaker));
+        entry.appendChild(Utils.el("div", "history-text", h.text));
+        body.appendChild(entry);
+      });
+    }
+    UI.closePanel("pause-menu");
+    UI.openPanel("panel-history");
+  },
+
+  bindSettings() {
+    const setTextSpeed = document.getElementById("set-text-speed");
+    const valTextSpeed = document.getElementById("val-text-speed");
+    setTextSpeed.value = STATE.settings.textSpeed;
+    valTextSpeed.textContent = STATE.settings.textSpeed + "ms";
+    setTextSpeed.oninput = () => {
+      STATE.settings.textSpeed = parseInt(setTextSpeed.value);
+      valTextSpeed.textContent = STATE.settings.textSpeed + "ms";
+      SaveMgr.saveSettings();
+    };
+
+    const setAutoDelay = document.getElementById("set-auto-delay");
+    const valAutoDelay = document.getElementById("val-auto-delay");
+    setAutoDelay.value = STATE.settings.autoDelay;
+    valAutoDelay.textContent = (STATE.settings.autoDelay / 1000).toFixed(1) + "s";
+    setAutoDelay.oninput = () => {
+      STATE.settings.autoDelay = parseInt(setAutoDelay.value);
+      valAutoDelay.textContent = (STATE.settings.autoDelay / 1000).toFixed(1) + "s";
+      SaveMgr.saveSettings();
+    };
+
+    const setBgm = document.getElementById("set-bgm-vol");
+    const valBgm = document.getElementById("val-bgm-vol");
+    setBgm.value = Math.round(STATE.settings.bgmVolume * 100);
+    valBgm.textContent = setBgm.value + "%";
+    setBgm.oninput = () => {
+      const v = parseInt(setBgm.value) / 100;
+      AudioMgr.setBgmVolume(v);
+      valBgm.textContent = setBgm.value + "%";
+      SaveMgr.saveSettings();
+    };
+
+    const setSfx = document.getElementById("set-sfx-vol");
+    const valSfx = document.getElementById("val-sfx-vol");
+    setSfx.value = Math.round(STATE.settings.sfxVolume * 100);
+    valSfx.textContent = setSfx.value + "%";
+    setSfx.oninput = () => {
+      const v = parseInt(setSfx.value) / 100;
+      AudioMgr.setSfxVolume(v);
+      valSfx.textContent = setSfx.value + "%";
+      SaveMgr.saveSettings();
+    };
+
+    const setVoice = document.getElementById("set-voice-vol");
+    const valVoice = document.getElementById("val-voice-vol");
+    setVoice.value = Math.round(STATE.settings.voiceVolume * 100);
+    valVoice.textContent = setVoice.value + "%";
+    setVoice.oninput = () => {
+      const v = parseInt(setVoice.value) / 100;
+      AudioMgr.setVoiceVolume(v);
+      valVoice.textContent = setVoice.value + "%";
+      SaveMgr.saveSettings();
+    };
+
+    const setSkip = document.getElementById("set-skip-read");
+    if (STATE.settings.skipRead) setSkip.classList.add("on");
+    setSkip.onclick = () => {
+      STATE.settings.skipRead = !STATE.settings.skipRead;
+      setSkip.classList.toggle("on", STATE.settings.skipRead);
+      SaveMgr.saveSettings();
+    };
+
+    const setPressure = document.getElementById("set-show-pressure");
+    if (STATE.settings.showPressure) setPressure.classList.add("on");
+    setPressure.onclick = () => {
+      STATE.settings.showPressure = !STATE.settings.showPressure;
+      setPressure.classList.toggle("on", STATE.settings.showPressure);
+      UI.togglePressureHud(STATE.settings.showPressure);
+      SaveMgr.saveSettings();
+    };
+
+    const setHighlight = document.getElementById("set-highlight");
+    if (STATE.settings.highlight) setHighlight.classList.add("on");
+    setHighlight.onclick = () => {
+      STATE.settings.highlight = !STATE.settings.highlight;
+      setHighlight.classList.toggle("on", STATE.settings.highlight);
+      SaveMgr.saveSettings();
+    };
+  }
+};
+
+/* ============================================================
+   启动
+   ============================================================ */
+window.addEventListener("load", () => {
+  Game.boot().catch(e => {
+    console.error("启动失败:", e);
+    document.getElementById("loading-tip").textContent = "加载失败：" + e.message;
+  });
+});
+
+document.addEventListener("gesturestart", e => e.preventDefault());
+document.addEventListener("dblclick", e => e.preventDefault(), { passive: false });
+
+document.addEventListener("keydown", e => {
+  if (!STATE.inGame) return;
+  switch (e.key) {
+    case " ":
+    case "Enter":
+      e.preventDefault();
+      Dialogue.advance();
+      break;
+    case "Control":
+      STATE.isSkipMode = true;
+      UI.dom.skipIndicator.classList.add("active");
+      break;
+    case "Escape":
+      Game.openPauseMenu();
+      break;
+  }
+});
+document.addEventListener("keyup", e => {
+  if (e.key === "Control") {
+    STATE.isSkipMode = false;
+    UI.dom.skipIndicator.classList.remove("active");
+  }
+});
+</script>
+</body>
+</html>
+  
